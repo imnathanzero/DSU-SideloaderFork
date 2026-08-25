@@ -9,7 +9,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewModelScope
 import com.topjohnwu.superuser.Shell
-import dagger.hilt.android.lifecycle.HiltViewModel
+aimport dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -87,8 +87,14 @@ class HomeViewModel @Inject constructor(
 
     fun resetInstallationCard() =
         _uiState.update {
+            val installationStep = if (it.isDsuInstalled) {
+                InstallationStep.DSU_ALREADY_INSTALLED
+            } else {
+                InstallationStep.NOT_INSTALLING
+            }
+
             it.copy(
-                installationCard = InstallationCardState(),
+                installationCard = InstallationCardState(installationStep = installationStep),
                 sheetDisplay = SheetDisplayState.NONE,
             )
         }
@@ -109,6 +115,13 @@ class HomeViewModel @Inject constructor(
                     return@run
                 }
                 if (isInstalled) {
+                    _uiState.update {
+                        it.copy(
+                            isDsuInstalled = true,
+                            userDataCard = it.userDataCard.copy(preserveSelected = true),
+                        )
+                    }
+                    session.preferences.preserveUserdata = true
                     updateInstallationCard { it.copy(installationStep = InstallationStep.DSU_ALREADY_INSTALLED) }
                     return@run
                 }
@@ -264,6 +277,7 @@ class HomeViewModel @Inject constructor(
             onCreatePartition = this::onCreatePartition,
             onInstallationStepUpdate = this::onStepUpdate,
             onInstallationSuccess = this::onRootInstallationSuccess,
+            preserveUserdata = session.preferences.preserveUserdata,
         ).invoke()
     }
 
@@ -319,8 +333,6 @@ class HomeViewModel @Inject constructor(
             logger != null && logger!!.isLogging.get()
         ) {
             logger!!.destroy()
-            // Since stopping installation requires MANAGE_DYNAMIC_SYSTEM
-            // then, we stop installation using other way, not so polite, but works :)))
             PrivilegedProvider.run { forceStopPackage("com.android.dynsystem") }
         }
 
@@ -357,7 +369,15 @@ class HomeViewModel @Inject constructor(
             remove()
             forceStopPackage("com.android.dynsystem")
             dismissSheet()
-            resetInstallationCard()
+            _uiState.update {
+                it.copy(
+                    installationCard = InstallationCardState(),
+                    sheetDisplay = SheetDisplayState.NONE,
+                    isDsuInstalled = false,
+                    userDataCard = it.userDataCard.copy(preserveSelected = false),
+                )
+            }
+            session.preferences.preserveUserdata = false
         }
     }
 
@@ -389,6 +409,11 @@ class HomeViewModel @Inject constructor(
 
     fun onCheckUserdataCard() =
         updateUserdataCard { it.copy(isSelected = !it.isSelected, text = "") }
+
+    fun onCheckPreserveUserdata(checked: Boolean) {
+        updateUserdataCard { it.copy(preserveSelected = checked) }
+        session.preferences.preserveUserdata = checked
+    }
 
     fun updateUserdataSize(input: String) {
         val selectedSize = FilenameUtils.getDigits(input)
@@ -457,7 +482,6 @@ class HomeViewModel @Inject constructor(
         val extension = filename.substringAfterLast(".", "")
         val supportedFiles = arrayListOf("gz", "xz", "img", "gzip")
 
-        // DSU packages (zip files), are only supported in R+
         if (Build.VERSION.SDK_INT > 29) {
             supportedFiles.add("zip")
         }
