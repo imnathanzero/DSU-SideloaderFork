@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import vegabobo.dsusideloader.R
 import vegabobo.dsusideloader.preparation.InstallationStep
+import vegabobo.dsusideloader.ui.cards.installation.content.DsuInstalledCardContent
 import vegabobo.dsusideloader.ui.cards.installation.content.NotInstallingCardContent
 import vegabobo.dsusideloader.ui.cards.installation.content.ProgressableCardContent
 import vegabobo.dsusideloader.ui.screen.home.InstallationCardState
@@ -35,12 +36,13 @@ fun InstallationCardStep(
                 onClickInstall = onClickInstall,
             )
         InstallationStep.DSU_ALREADY_INSTALLED ->
-            ProgressableCardContent(
-                text = stringResource(R.string.dsu_already_installed),
-                textFirstButton = stringResource(id = R.string.reboot_into_dsu),
-                onClickFirstButton = onClickRebootToDynOS,
-                textSecondButton = stringResource(id = R.string.discard),
-                onClickSecondButton = onClickDiscardDsu,
+            DsuInstalledCardContent(
+                textFieldInteraction = textFieldInteraction,
+                uiState = uiState,
+                onClickClear = onClickClear,
+                onClickInstall = onClickInstall,
+                onClickRebootToDynOS = onClickRebootToDynOS,
+                onClickDiscardDsu = onClickDiscardDsu,
             )
         InstallationStep.DSU_ALREADY_RUNNING_DYN_OS ->
             ProgressableCardContent(
@@ -123,7 +125,7 @@ fun InstallationCardStep(
                 showProgressBar = true,
                 isIndeterminate = true,
             )
-        InstallationStep.INSTALLING -> {
+        InstallationStep.INSTALLING ->
             ProgressableCardContent(
                 text = stringResource(R.string.installing_partition, uiState.currentPartitionText),
                 textFirstButton = stringResource(id = R.string.cancel),
@@ -133,8 +135,7 @@ fun InstallationCardStep(
                 showProgressBar = true,
                 progress = uiState.installationProgress,
             )
-        }
-        InstallationStep.INSTALLING_ROOTED -> {
+        InstallationStep.INSTALLING_ROOTED ->
             ProgressableCardContent(
                 text = stringResource(R.string.installing_partition, uiState.currentPartitionText),
                 textSecondButton = stringResource(id = R.string.cancel),
@@ -142,7 +143,6 @@ fun InstallationCardStep(
                 showProgressBar = true,
                 progress = uiState.installationProgress,
             )
-        }
         InstallationStep.CREATING_PARTITION ->
             ProgressableCardContent(
                 text = stringResource(R.string.creating_partition, uiState.currentPartitionText),
@@ -189,10 +189,7 @@ fun InstallationCardStep(
             )
         InstallationStep.ERROR_EXTERNAL_SDCARD_ALLOC ->
             ProgressableCardContent(
-                text = stringResource(
-                    R.string.allocation_error_description,
-                    uiState.errorText,
-                ),
+                text = stringResource(R.string.allocation_error_description, uiState.errorText),
                 textFirstButton = stringResource(id = R.string.allocation_error_action),
                 onClickFirstButton = onClickUnmountSdCardAndRetry,
                 textSecondButton = stringResource(id = R.string.cancel),
@@ -208,10 +205,7 @@ fun InstallationCardStep(
             )
         InstallationStep.ERROR_F2FS_WRONG_PATH ->
             ProgressableCardContent(
-                text = stringResource(
-                    R.string.fs_features_error_description,
-                    uiState.errorText,
-                ),
+                text = stringResource(R.string.fs_features_error_description, uiState.errorText),
                 textFirstButton = stringResource(id = R.string.view_logs),
                 onClickFirstButton = onClickViewLogs,
                 textSecondButton = stringResource(id = R.string.clear),
