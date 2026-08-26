@@ -2,19 +2,21 @@ package vegabobo.dsusideloader.ui.screen.home
 
 import android.content.Intent
 import android.net.Uri
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import vegabobo.dsusideloader.model.DsuConfig
 import vegabobo.dsusideloader.util.CmdRunner
-import vegabobo.dsusideloader.util.FilenameUtils
 
-private const val DSU_USERDATA_IMAGE = "/data/gsi/dsu/userdata_gsi.img"
+private const val DSU_INSTALL_DIR_FILE = "/metadata/gsi/dsu/install_dir"
+private const val DEFAULT_DSU_INSTALL_DIR = "/data/gsi/dsu"
 
 /** Reads the canonical DSU userdata image size from the installed backing image. */
 suspend fun HomeViewModel.detectInstalledUserdataSize(): Long? = withContext(Dispatchers.IO) {
     if (!uiState.value.isDsuInstalled || !session.isRoot()) return@withContext null
-    val output = CmdRunner.run("stat -c %s $DSU_USERDATA_IMAGE 2>/dev/null").trim()
+    val installDir = CmdRunner.run("cat $DSU_INSTALL_DIR_FILE 2>/dev/null").trim()
+        .ifEmpty { DEFAULT_DSU_INSTALL_DIR }
+    val imagePath = "$installDir/userdata_gsi.img"
+    val output = CmdRunner.run("stat -c %s \"$imagePath\" 2>/dev/null").trim()
     output.toLongOrNull()?.takeIf { it > 0L }
 }
 
@@ -37,12 +39,8 @@ fun HomeViewModel.saveDsuConfig(uri: Uri) {
 
 fun HomeViewModel.restoreDsuConfig(uri: Uri) {
     runCatching {
-        application.contentResolver.takePersistableUriPermission(
-            uri,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION,
-        )
+        application.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-
     runCatching {
         val text = application.contentResolver.openInputStream(uri)?.bufferedReader().use { reader ->
             requireNotNull(reader) { "Unable to open config" }
@@ -64,8 +62,6 @@ fun HomeViewModel.restoreDsuConfig(uri: Uri) {
 
         onCheckPreserveUserdata(config.preserveUserdata)
         updateUserdataSize(session.userSelection.getUserDataSizeAsGB())
-        if (session.userSelection.isCustomImageSize()) {
-            updateImageSize(session.userSelection.userSelectedImageSize.toString())
-        }
+        if (session.userSelection.isCustomImageSize()) updateImageSize(session.userSelection.userSelectedImageSize.toString())
     }
 }
