@@ -1,5 +1,8 @@
 package vegabobo.dsusideloader.ui.screen.home
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,14 +56,26 @@ fun Home(
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
 
-    if (uiState.shouldKeepScreenOn) {
-        KeepScreenOn()
-    }
+    val createConfigLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri -> uri?.let(homeViewModel::saveDsuConfig) }
+    val restoreConfigLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> uri?.let(homeViewModel::restoreDsuConfig) }
+
+    if (uiState.shouldKeepScreenOn) KeepScreenOn()
 
     LaunchedEffect(Unit) {
         homeViewModel.setupUserPreferences()
-        homeViewModel.session.operationMode.collectLatest {
-            homeViewModel.initialChecks()
+        homeViewModel.session.operationMode.collectLatest { homeViewModel.initialChecks() }
+    }
+
+    LaunchedEffect(uiState.isDsuInstalled) {
+        if (uiState.isDsuInstalled) {
+            val size = homeViewModel.detectInstalledUserdataSize()
+            if (size != null) {
+                homeViewModel.updateUserdataSize((size / 1024L / 1024L / 1024L).toString())
+            }
         }
     }
 
@@ -78,33 +93,12 @@ fun Home(
         content = {
             Box(modifier = Modifier.animateContentSize()) {
                 when (uiState.additionalCard) {
-                    AdditionalCardState.NO_DYNAMIC_PARTITIONS ->
-                        UnsupportedCard(
-                            onClickClose = { exitProcess(0) },
-                            onClickContinueAnyway = { homeViewModel.overrideDynamicPartitionCheck() },
-                        )
-
-                    AdditionalCardState.SETUP_STORAGE ->
-                        SetupStorage { homeViewModel.takeUriPermission(it) }
-
-                    AdditionalCardState.UNAVAIABLE_STORAGE ->
-                        StorageWarningCard(
-                            minPercentageFreeStorage = homeViewModel.allocPercentageInt.toString(),
-                            onClick = { homeViewModel.overrideUnavaiableStorage() },
-                        )
-
-                    AdditionalCardState.MISSING_READ_LOGS_PERMISSION ->
-                        RequiresLogPermissionCard(
-                            onClickGrant = { homeViewModel.grantReadLogs() },
-                            onClickRefuse = { homeViewModel.refuseReadLogs() },
-                        )
-
-                    AdditionalCardState.GRANTING_READ_LOGS_PERMISSION ->
-                        GrantingPermissionCard()
-
-                    AdditionalCardState.BOOTLOADER_UNLOCKED_WARNING ->
-                        UnlockedBootloaderCard { homeViewModel.onClickBootloaderUnlockedWarning() }
-
+                    AdditionalCardState.NO_DYNAMIC_PARTITIONS -> UnsupportedCard(onClickClose = { exitProcess(0) }, onClickContinueAnyway = { homeViewModel.overrideDynamicPartitionCheck() })
+                    AdditionalCardState.SETUP_STORAGE -> SetupStorage { homeViewModel.takeUriPermission(it) }
+                    AdditionalCardState.UNAVAIABLE_STORAGE -> StorageWarningCard(minPercentageFreeStorage = homeViewModel.allocPercentageInt.toString(), onClick = { homeViewModel.overrideUnavaiableStorage() })
+                    AdditionalCardState.MISSING_READ_LOGS_PERMISSION -> RequiresLogPermissionCard(onClickGrant = { homeViewModel.grantReadLogs() }, onClickRefuse = { homeViewModel.refuseReadLogs() })
+                    AdditionalCardState.GRANTING_READ_LOGS_PERMISSION -> GrantingPermissionCard()
+                    AdditionalCardState.BOOTLOADER_UNLOCKED_WARNING -> UnlockedBootloaderCard { homeViewModel.onClickBootloaderUnlockedWarning() }
                     AdditionalCardState.NONE -> {}
                 }
             }
@@ -123,6 +117,8 @@ fun Home(
                     onClickRebootToDynOS = { homeViewModel.onClickRebootToDynOS() },
                     onClickViewLogs = { homeViewModel.showLogsWarning() },
                     onClickViewCommands = { navigate(Destinations.ADBInstallation) },
+                    onClickBackupConfig = { createConfigLauncher.launch("dsu-config.json") },
+                    onClickRestoreConfig = { restoreConfigLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
                     minPercentageOfFreeStorage = homeViewModel.allocPercentageInt.toString(),
                 )
                 UserdataCard(
@@ -148,40 +144,11 @@ fun Home(
     )
 
     when (uiState.sheetDisplay) {
-        SheetDisplayState.CONFIRM_INSTALLATION ->
-            ConfirmInstallationSheet(
-                filename = homeViewModel.obtainSelectedFilename(),
-                userdata = homeViewModel.session.userSelection.getUserDataSizeAsGB(),
-                fileSize = homeViewModel.session.userSelection.userSelectedImageSize,
-                onClickConfirm = { homeViewModel.onConfirmInstallationSheet() },
-                onClickCancel = { homeViewModel.dismissSheet() },
-            )
-
-        SheetDisplayState.CANCEL_INSTALLATION ->
-            CancelSheet(
-                onClickConfirm = { homeViewModel.onClickCancelInstallationButton() },
-                onClickCancel = { homeViewModel.dismissSheet() },
-            )
-
-        SheetDisplayState.IMAGESIZE_WARNING ->
-            ImageSizeWarningSheet(
-                onClickConfirm = { homeViewModel.dismissSheet() },
-                onClickCancel = { homeViewModel.onCheckImageSizeCard() },
-            )
-
-        SheetDisplayState.DISCARD_DSU ->
-            DiscardDSUSheet(
-                onClickConfirm = { homeViewModel.onClickDiscardGsi() },
-                onClickCancel = { homeViewModel.dismissSheet() },
-            )
-
-        SheetDisplayState.VIEW_LOGS ->
-            ViewLogsBottomSheet(
-                logs = uiState.installationLogs,
-                onClickSaveLogs = { homeViewModel.saveLogs(it) },
-                onDismiss = { homeViewModel.dismissSheet() },
-            )
-
+        SheetDisplayState.CONFIRM_INSTALLATION -> ConfirmInstallationSheet(filename = homeViewModel.obtainSelectedFilename(), userdata = homeViewModel.session.userSelection.getUserDataSizeAsGB(), fileSize = homeViewModel.session.userSelection.userSelectedImageSize, onClickConfirm = { homeViewModel.onConfirmInstallationSheet() }, onClickCancel = { homeViewModel.dismissSheet() })
+        SheetDisplayState.CANCEL_INSTALLATION -> CancelSheet(onClickConfirm = { homeViewModel.onClickCancelInstallationButton() }, onClickCancel = { homeViewModel.dismissSheet() })
+        SheetDisplayState.IMAGESIZE_WARNING -> ImageSizeWarningSheet(onClickConfirm = { homeViewModel.dismissSheet() }, onClickCancel = { homeViewModel.onCheckImageSizeCard() })
+        SheetDisplayState.DISCARD_DSU -> DiscardDSUSheet(onClickConfirm = { homeViewModel.onClickDiscardGsi() }, onClickCancel = { homeViewModel.dismissSheet() })
+        SheetDisplayState.VIEW_LOGS -> ViewLogsBottomSheet(logs = uiState.installationLogs, onClickSaveLogs = { homeViewModel.saveLogs(it) }, onDismiss = { homeViewModel.dismissSheet() })
         SheetDisplayState.NONE -> {}
     }
 }
