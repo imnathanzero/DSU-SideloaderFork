@@ -56,12 +56,8 @@ fun Home(
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
 
-    val createConfigLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri -> uri?.let(homeViewModel::saveDsuConfig) }
-    val restoreConfigLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri -> uri?.let(homeViewModel::restoreDsuConfig) }
+    val createConfigLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri -> uri?.let(homeViewModel::saveDsuConfig) }
+    val restoreConfigLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(homeViewModel::restoreDsuConfig) }
 
     if (uiState.shouldKeepScreenOn) KeepScreenOn()
 
@@ -73,9 +69,25 @@ fun Home(
     LaunchedEffect(uiState.isDsuInstalled) {
         if (uiState.isDsuInstalled) {
             val size = homeViewModel.detectInstalledUserdataSize()
-            if (size != null) {
-                homeViewModel.updateUserdataSize((size / 1024L / 1024L / 1024L).toString())
+            if (size != null) homeViewModel.updateUserdataSize((size / 1024L / 1024L / 1024L).toString())
+        }
+    }
+
+    // Built-in installation does not use the normal diagnostic pipeline, so capture its logcat separately.
+    LaunchedEffect(uiState.isInstalling(), homeViewModel.session.preferences.useBuiltinInstaller) {
+        if (uiState.isInstalling() && homeViewModel.session.isRoot() && homeViewModel.session.preferences.useBuiltinInstaller) {
+            if (homeViewModel.logger == null) {
+                homeViewModel.logger = vegabobo.dsusideloader.installer.privileged.LogcatDiagnostic(
+                    onInstallationError = { _, _ -> },
+                    onStepUpdate = { },
+                    onInstallationProgressUpdate = { _, _ -> },
+                    onInstallationSuccess = { },
+                    onLogLineReceived = { },
+                )
             }
+            homeViewModel.logger!!.startCaptureOnly("Built-in DSU installer")
+        } else if (!uiState.isInstalling() && homeViewModel.logger?.isLogging?.get() == true) {
+            homeViewModel.logger!!.destroy()
         }
     }
 
