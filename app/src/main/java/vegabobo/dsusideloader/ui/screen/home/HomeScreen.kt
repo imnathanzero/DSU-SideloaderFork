@@ -1,6 +1,5 @@
 package vegabobo.dsusideloader.ui.screen.home
 
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
@@ -73,7 +72,6 @@ fun Home(
         }
     }
 
-    // Built-in installation does not use the normal diagnostic pipeline, so capture its logcat separately.
     LaunchedEffect(uiState.isInstalling(), homeViewModel.session.preferences.useBuiltinInstaller) {
         if (uiState.isInstalling() && homeViewModel.session.isRoot() && homeViewModel.session.preferences.useBuiltinInstaller) {
             if (homeViewModel.logger == null) {
@@ -160,7 +158,11 @@ fun Home(
         SheetDisplayState.CANCEL_INSTALLATION -> CancelSheet(onClickConfirm = { homeViewModel.onClickCancelInstallationButton() }, onClickCancel = { homeViewModel.dismissSheet() })
         SheetDisplayState.IMAGESIZE_WARNING -> ImageSizeWarningSheet(onClickConfirm = { homeViewModel.dismissSheet() }, onClickCancel = { homeViewModel.onCheckImageSizeCard() })
         SheetDisplayState.DISCARD_DSU -> DiscardDSUSheet(onClickConfirm = { homeViewModel.onClickDiscardGsi() }, onClickCancel = { homeViewModel.dismissSheet() })
-        SheetDisplayState.VIEW_LOGS -> ViewLogsBottomSheet(logs = uiState.installationLogs, onClickSaveLogs = { homeViewModel.saveLogs(it) }, onDismiss = { homeViewModel.dismissSheet() })
+        SheetDisplayState.VIEW_LOGS -> ViewLogsBottomSheet(
+            logs = uiState.installationLogs.ifEmpty { homeViewModel.logger?.logs.orEmpty() },
+            onClickSaveLogs = { homeViewModel.saveCurrentLogs(it) },
+            onDismiss = { homeViewModel.dismissSheet() },
+        )
         SheetDisplayState.NONE -> {}
     }
 }
