@@ -24,6 +24,8 @@
     <string name="clear">Clear</string>
     <string name="install">Install</string>
     <string name="update">Update</string>
+    <string name="backup_config">Backup config</string>
+    <string name="restore_config">Restore config</string>
 
     <!-- Installation dialog -->
     <string name="proceed_installation">Proceed installation?</string>
