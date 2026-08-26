@@ -28,6 +28,9 @@ fun DsuInstalledCardContent(
     onClickInstall: () -> Unit,
     onClickRebootToDynOS: () -> Unit,
     onClickDiscardDsu: () -> Unit,
+    onClickViewLogs: () -> Unit,
+    onClickBackupConfig: () -> Unit,
+    onClickRestoreConfig: () -> Unit,
 ) {
     Text(
         text = stringResource(R.string.dsu_already_installed),
@@ -59,10 +62,7 @@ fun DsuInstalledCardContent(
         }
         Spacer(modifier = Modifier.weight(1F))
         if (uiState.isInstallable) {
-            SecondaryButton(
-                text = stringResource(R.string.clear),
-                onClick = onClickClear,
-            )
+            SecondaryButton(text = stringResource(R.string.clear), onClick = onClickClear)
             Spacer(modifier = Modifier.padding(end = 6.dp))
         }
         PrimaryButton(
@@ -70,6 +70,20 @@ fun DsuInstalledCardContent(
             onClick = onClickInstall,
             isEnabled = uiState.isInstallable,
         )
+    }
+
+    Spacer(modifier = Modifier.padding(top = 8.dp))
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Spacer(modifier = Modifier.weight(1F))
+        SecondaryButton(text = stringResource(R.string.view_logs), onClick = onClickViewLogs)
+        Spacer(modifier = Modifier.padding(end = 6.dp))
+        SecondaryButton(text = stringResource(R.string.backup_config), onClick = onClickBackupConfig)
+        Spacer(modifier = Modifier.padding(end = 6.dp))
+        SecondaryButton(text = stringResource(R.string.restore_config), onClick = onClickRestoreConfig)
     }
 
     Spacer(modifier = Modifier.padding(top = 8.dp))
