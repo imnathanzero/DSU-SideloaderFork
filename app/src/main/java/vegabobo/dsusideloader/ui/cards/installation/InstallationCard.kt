@@ -30,34 +30,21 @@ fun InstallationCard(
     onSelectFileSuccess: (Uri) -> Unit,
     onClickViewLogs: () -> Unit,
     onClickViewCommands: () -> Unit,
+    onClickBackupConfig: () -> Unit,
+    onClickRestoreConfig: () -> Unit,
 ) {
     var chooseFile = Intent(Intent.ACTION_OPEN_DOCUMENT)
     chooseFile.type = "*/*"
-    val mimetypes = arrayOf(
-        "application/gzip",
-        "application/x-gzip",
-        "application/x-xz",
-        "application/zip",
-        "application/octet-stream",
-    )
+    val mimetypes = arrayOf("application/gzip", "application/x-gzip", "application/x-xz", "application/zip", "application/octet-stream")
     chooseFile.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes)
     chooseFile = Intent.createChooser(chooseFile, "")
 
-    val launcherSelectFile = launcherAcResult {
-        onSelectFileSuccess(it)
-    }
-
+    val launcherSelectFile = launcherAcResult { onSelectFileSuccess(it) }
     val textFieldInteraction = remember { MutableInteractionSource() }
 
-    if (textFieldInteraction.collectIsPressedAsState().value) {
-        launcherSelectFile.launch(chooseFile)
-    }
+    if (textFieldInteraction.collectIsPressedAsState().value) launcherSelectFile.launch(chooseFile)
 
-    CardBox(
-        cardTitle = stringResource(R.string.installation),
-        addToggle = false,
-        modifier = modifier,
-    ) {
+    CardBox(cardTitle = stringResource(R.string.installation), addToggle = false, modifier = modifier) {
         InstallationCardStep(
             uiState = uiState,
             textFieldInteraction = textFieldInteraction,
@@ -72,6 +59,8 @@ fun InstallationCard(
             onClickRebootToDynOS = onClickRebootToDynOS,
             onClickViewLogs = onClickViewLogs,
             onClickViewCommands = onClickViewCommands,
+            onClickBackupConfig = onClickBackupConfig,
+            onClickRestoreConfig = onClickRestoreConfig,
             minPercentageOfFreeStorage = minPercentageOfFreeStorage,
         )
     }
