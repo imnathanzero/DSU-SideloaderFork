@@ -7,18 +7,20 @@ import vegabobo.dsusideloader.IPrivilegedService
 
 class Connection : ServiceConnection {
 
+    @Volatile
     var SERVICE: IPrivilegedService? = null
+        private set
+
+    @Synchronized
     fun set(service: IPrivilegedService?) {
-        if (SERVICE == null) {
-            SERVICE = service
-        }
+        SERVICE = service
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-        set(IPrivilegedService.Stub.asInterface(service))
+        set(service?.let(IPrivilegedService.Stub::asInterface))
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
-        SERVICE = null
+        set(null)
     }
 }

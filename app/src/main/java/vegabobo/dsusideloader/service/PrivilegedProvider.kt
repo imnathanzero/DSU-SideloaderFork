@@ -3,6 +3,7 @@ package vegabobo.dsusideloader.service
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import vegabobo.dsusideloader.IPrivilegedService
@@ -10,6 +11,7 @@ import vegabobo.dsusideloader.IPrivilegedService
 object PrivilegedProvider {
 
     private val tag = this.javaClass.simpleName
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     var connection = Connection()
 
@@ -17,10 +19,9 @@ object PrivilegedProvider {
         onFail: () -> Unit = {},
         onConnected: suspend IPrivilegedService.() -> Unit,
     ) {
-        fun service() = this.connection.SERVICE!!
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             if (isConnected()) {
-                onConnected(service())
+                connection.SERVICE?.let { onConnected(it) }
                 return@launch
             }
             var timeout = 0
@@ -34,12 +35,14 @@ object PrivilegedProvider {
                 delay(1000)
                 Log.d(tag, "Service unavailable, checking again in 1s.. [${timeout / 1000}s/20s]")
             }
-            Log.d(tag, "IPrivilegedService available, uid: ${service().uid}")
-            onConnected(service())
+            connection.SERVICE?.let {
+                Log.d(tag, "IPrivilegedService available, uid: ${it.uid}")
+                onConnected(it)
+            }
         }
     }
 
-    // Blocking
+    // Blocking for legacy callers. Prefer run() for asynchronous work.
     fun getService(): IPrivilegedService {
         var timeout = 0
         while (!isConnected()) {
@@ -49,15 +52,11 @@ object PrivilegedProvider {
             }
             Thread.sleep(1000)
         }
-        return this.connection.SERVICE!!
+        return connection.SERVICE ?: throw Exception("Service disconnected.")
     }
 
-    // Blocking
-    fun isRoot(): Boolean {
-        return this.getService().uid == 0
-    }
+    // Blocking for legacy callers.
+    fun isRoot(): Boolean = getService().uid == 0
 
-    fun isConnected(): Boolean {
-        return this.connection.SERVICE != null
-    }
+    fun isConnected(): Boolean = connection.SERVICE != null
 }

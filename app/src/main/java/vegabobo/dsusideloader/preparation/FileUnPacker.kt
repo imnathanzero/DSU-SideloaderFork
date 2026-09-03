@@ -35,7 +35,7 @@ class FileUnPacker(
         while (-1 != inputStr.read(buffer)
                 .also { n = it } && !installationJob.isCancelled
         ) {
-            readed += buffer.size
+            readed += n
             onReadedBuffer(readed)
             outputStr.write(buffer, 0, n)
         }
@@ -70,7 +70,11 @@ class FileUnPacker(
     }
 
     private fun updateProgress(fileSize: Long, readed: Long) {
-        val percent: Float = readed.toFloat() / fileSize.toFloat()
+        if (fileSize <= 0L) {
+            onProgressChange(0F)
+            return
+        }
+        val percent = (readed.toFloat() / fileSize.toFloat()).coerceIn(0F, 1F)
         onProgressChange(percent)
     }
 }
