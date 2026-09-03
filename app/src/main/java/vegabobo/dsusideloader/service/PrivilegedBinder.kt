@@ -7,12 +7,12 @@ import com.topjohnwu.superuser.ipc.RootService
 
 class PrivilegedRootService : RootService() {
     override fun onBind(intent: Intent): IBinder {
-        return PrivilegedService()
+        return PrivilegedService(applicationInfo.uid)
     }
 }
 
 class PrivilegedSystemService : Service() {
     override fun onBind(intent: Intent): IBinder {
-        return PrivilegedService()
+        return PrivilegedService(applicationInfo.uid)
     }
 }

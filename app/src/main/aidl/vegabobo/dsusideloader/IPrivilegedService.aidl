@@ -9,13 +9,6 @@ interface IPrivilegedService {
     void setDynProp() = 100;
     int getUid() = 1000;
 
-    // Activity Manager
-    void startActivity(in Intent intent) = 1001;
-    void forceStopPackage(String packageName) = 1003;
-
-    // Package Manager
-    void grantPermission(String permission) = 2001;
-
     // Storage Manager
     List<VolumeInfo> getVolumes() = 3001;
     void unmount(String volId) = 3002;
