@@ -51,6 +51,9 @@ class SettingsViewModel @Inject constructor(
     fun togglePreference(preference: String, value: Boolean) {
         viewModelScope.launch {
             updateBoolPref(preference, value) {
+                if (preference == AppPrefs.KEEP_USERDATA) {
+                    session.preferences.preserveUserdata = value
+                }
                 _uiState.update {
                     val cloneMap = hashMapOf<String, Boolean>()
                     cloneMap.putAll(uiState.value.preferences)

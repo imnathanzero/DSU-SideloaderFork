@@ -117,7 +117,7 @@
     <string name="userdata_size">Userdata size</string>
     <string name="userdata_size_info">Size in gigabytes</string>
     <string name="allowed_userdata_allocation">Maximum available for allocation: %1$sGB</string>
-    <string name="preserve_userdata">Preserve userdata</string>
+    <string name="preserve_userdata">Keep Userdata</string>
     <string name="preserve_userdata_desc">Keep the existing DSU userdata partition when updating.</string>
 
     <!-- Image size card -->

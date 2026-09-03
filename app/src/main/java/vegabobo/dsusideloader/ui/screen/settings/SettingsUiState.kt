@@ -12,6 +12,7 @@ data class SettingsUiState(
     val preferences: HashMap<String, Boolean> = hashMapOf(
         AppPrefs.USE_BUILTIN_INSTALLER to false,
         AppPrefs.KEEP_SCREEN_ON to false,
+        AppPrefs.KEEP_USERDATA to true,
         AppPrefs.UMOUNT_SD to false,
         AppPrefs.DISABLE_STORAGE_CHECK to false,
         AppPrefs.FULL_LOGCAT_LOGGING to false,

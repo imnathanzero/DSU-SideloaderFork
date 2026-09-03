@@ -63,6 +63,13 @@ fun Settings(
             },
         )
         PreferenceItem(
+            title = stringResource(id = R.string.preserve_userdata),
+            description = stringResource(id = R.string.preserve_userdata_desc),
+            showToggle = true,
+            isChecked = uiState.preferences[AppPrefs.KEEP_USERDATA]!!,
+            onClick = { settingsViewModel.togglePreference(AppPrefs.KEEP_USERDATA, !it) },
+        )
+        PreferenceItem(
             title = stringResource(id = R.string.unmount_sd_title),
             description = stringResource(id = R.string.unmount_sd_description),
             showToggle = true,
