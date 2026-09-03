@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collectLatest
 import vegabobo.dsusideloader.R
 import vegabobo.dsusideloader.preparation.InstallationStep
@@ -57,8 +58,6 @@ object HomeLinks {
 private fun InstallationStep.isErrorStep(): Boolean =
     this == InstallationStep.ERROR ||
         this == InstallationStep.ERROR_CANCELED ||
-        this == InstallationStep.ERROR_REQUIRES_DISCARD_DSU ||
-        this == InstallationStep.ERROR_ALREADY_RUNNING_DYN_OS ||
         this == InstallationStep.ERROR_CREATE_PARTITION ||
         this == InstallationStep.ERROR_EXTERNAL_SDCARD_ALLOC ||
         this == InstallationStep.ERROR_NO_AVAIL_STORAGE ||
@@ -77,6 +76,7 @@ fun Home(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     var showErrorDialog by remember { mutableStateOf(false) }
+    var isDsuInstalled by remember { mutableStateOf(false) }
 
     if (uiState.shouldKeepScreenOn) {
         KeepScreenOn()
@@ -86,6 +86,17 @@ fun Home(
         homeViewModel.setupUserPreferences()
         homeViewModel.session.operationMode.collectLatest {
             homeViewModel.initialChecks()
+        }
+    }
+
+    LaunchedEffect(uiState.installationCard.installationStep) {
+        when (uiState.installationCard.installationStep) {
+            InstallationStep.DSU_ALREADY_INSTALLED,
+            InstallationStep.INSTALL_SUCCESS,
+            InstallationStep.INSTALL_SUCCESS_REBOOT_DYN_OS,
+            -> isDsuInstalled = true
+            InstallationStep.NOT_INSTALLING -> isDsuInstalled = false
+            else -> Unit
         }
     }
 
@@ -135,7 +146,7 @@ fun Home(
                 when (uiState.additionalCard) {
                     AdditionalCardState.NO_DYNAMIC_PARTITIONS ->
                         UnsupportedCard(
-                            onClickClose = { android.os.Process.killProcess(android.os.Process.myPid()) },
+                            onClickClose = { exitProcess(0) },
                             onClickContinueAnyway = { homeViewModel.overrideDynamicPartitionCheck() },
                         )
 
@@ -183,7 +194,7 @@ fun Home(
                 UserdataCard(
                     isEnabled = uiState.isInstalling(),
                     uiState = uiState.userDataCard,
-                    isDsuInstalled = uiState.installationCard.installationStep == InstallationStep.DSU_ALREADY_INSTALLED,
+                    isDsuInstalled = isDsuInstalled,
                     onCheckedChange = { homeViewModel.onCheckUserdataCard() },
                     onValueChange = { homeViewModel.updateUserdataSize(it) },
                     onPreserveCheckedChange = { homeViewModel.session.preferences.preserveUserdata = it },
