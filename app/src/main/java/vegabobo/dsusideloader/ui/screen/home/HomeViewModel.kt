@@ -66,10 +66,6 @@ class HomeViewModel @Inject constructor(
     private val hasAvailableStorage = storageStats.first
     private val maximumAllowedForAllocation = storageStats.second
 
-    //
-    // Helper methods used for controlling UI State
-    //
-
     private fun updateAdditionalCardState(additionalCard: AdditionalCardState) =
         _uiState.update { it.copy(additionalCard = additionalCard) }
 
@@ -95,13 +91,7 @@ class HomeViewModel @Inject constructor(
 
     fun dismissSheet() = updateSheetState(SheetDisplayState.NONE)
 
-    //
-    // Home startup and checks
-    //
-
     init {
-        // Check if a DSU is already installed
-        // Root-only because MANAGE_DYNAMIC_SYSTEM is required
         if (session.isRoot()) {
             PrivilegedProvider.run {
                 if (isInUse) {
@@ -161,6 +151,7 @@ class HomeViewModel @Inject constructor(
             _uiState.update { it.copy(shouldKeepScreenOn = shouldKeepScreenOn) }
 
             disabledStorageCheck = readBoolPref(AppPrefs.DISABLE_STORAGE_CHECK)
+            session.preferences.preserveUserdata = readBoolPref(AppPrefs.KEEP_USERDATA)
             Log.d(tag, "disabledStorageCheck: $shouldKeepScreenOn")
         }
     }
@@ -184,10 +175,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    //
-    // Installation
-    //
-
     fun obtainSelectedFilename(): String = session.userSelection.selectedFileName
 
     fun onClickCancel() {
@@ -209,6 +196,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO + installationJob) {
             session.preferences.isUnmountSdCard = readBoolPref(AppPrefs.UMOUNT_SD)
             session.preferences.useBuiltinInstaller = readBoolPref(AppPrefs.USE_BUILTIN_INSTALLER)
+            session.preferences.preserveUserdata = readBoolPref(AppPrefs.KEEP_USERDATA)
             Preparation(
                 storageManager = storageManager,
                 session = session,
@@ -264,6 +252,7 @@ class HomeViewModel @Inject constructor(
             onCreatePartition = this::onCreatePartition,
             onInstallationStepUpdate = this::onStepUpdate,
             onInstallationSuccess = this::onRootInstallationSuccess,
+            preserveUserdata = session.preferences.preserveUserdata,
         ).invoke()
     }
 
@@ -277,7 +266,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // Track and diagnose installation by reading logcat
     private fun startLogging() {
         if (logger == null) {
             logger = LogcatDiagnostic(
@@ -319,8 +307,6 @@ class HomeViewModel @Inject constructor(
             logger != null && logger!!.isLogging.get()
         ) {
             logger!!.destroy()
-            // Since stopping installation requires MANAGE_DYNAMIC_SYSTEM
-            // then, we stop installation using other way, not so polite, but works :)))
             PrivilegedProvider.run { forceStopPackage("com.android.dynsystem") }
         }
 
@@ -329,10 +315,6 @@ class HomeViewModel @Inject constructor(
         }
         session.dsuInstallation = DSUInstallationSource()
     }
-
-    //
-    // Installation Card actions
-    //
 
     fun onClickRebootToDynOS() {
         updateInstallationCard { it.copy(installationStep = InstallationStep.PROCESSING) }
@@ -383,10 +365,6 @@ class HomeViewModel @Inject constructor(
 
     fun showDiscardSheet() = updateSheetState(SheetDisplayState.DISCARD_DSU)
 
-    //
-    // Userdata card
-    //
-
     fun onCheckUserdataCard() =
         updateUserdataCard { it.copy(isSelected = !it.isSelected, text = "") }
 
@@ -418,10 +396,6 @@ class HomeViewModel @Inject constructor(
         updateUserdataCard { it.copy(text = sizeWithSuffix) }
     }
 
-    //
-    // Image size card
-    //
-
     fun onCheckImageSizeCard() {
         if (!uiState.value.imageSizeCard.isSelected) {
             updateSheetState(SheetDisplayState.IMAGESIZE_WARNING)
@@ -435,10 +409,6 @@ class HomeViewModel @Inject constructor(
         val inputWithSuffix = FilenameUtils.appendToDigitsToString(input, "b")
         updateImageSizeCard { it.copy(text = inputWithSuffix) }
     }
-
-    //
-    // File selection
-    //
 
     fun takeUriPermission(uri: Uri) {
         application.contentResolver.takePersistableUriPermission(
@@ -457,7 +427,6 @@ class HomeViewModel @Inject constructor(
         val extension = filename.substringAfterLast(".", "")
         val supportedFiles = arrayListOf("gz", "xz", "img", "gzip")
 
-        // DSU packages (zip files), are only supported in R+
         if (Build.VERSION.SDK_INT > 29) {
             supportedFiles.add("zip")
         }
@@ -483,10 +452,6 @@ class HomeViewModel @Inject constructor(
             )
         }
     }
-
-    //
-    // Read logs permission warning
-    //
 
     fun grantReadLogs() {
         updateAdditionalCardState(AdditionalCardState.GRANTING_READ_LOGS_PERMISSION)
@@ -514,10 +479,6 @@ class HomeViewModel @Inject constructor(
     fun showLogsWarning() {
         updateSheetState(SheetDisplayState.VIEW_LOGS)
     }
-
-    //
-    // Progress tracking
-    //
 
     private fun onRootInstallationSuccess() {
         updateInstallationCard { it.copy(installationStep = InstallationStep.INSTALL_SUCCESS_REBOOT_DYN_OS) }
