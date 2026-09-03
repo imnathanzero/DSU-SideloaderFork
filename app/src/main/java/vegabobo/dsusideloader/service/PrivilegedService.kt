@@ -1,6 +1,8 @@
 package vegabobo.dsusideloader.service
 
 import android.app.IActivityManager
+import android.content.Intent
+import android.content.pm.IPackageManager
 import android.gsi.GsiProgress
 import android.gsi.IGsiService
 import android.os.Build
@@ -61,6 +63,65 @@ class PrivilegedService(private val allowedCallerUid: Int) : IPrivilegedService.
 
     override fun getUid(): Int {
         return Process.myUid()
+    }
+
+    private var ACTIVITY_MANAGER: IActivityManager? = null
+
+    private fun requiresActivityManager() {
+        if (ACTIVITY_MANAGER == null) {
+            ACTIVITY_MANAGER = IActivityManager.Stub.asInterface(getBinder("activity"))
+        }
+    }
+
+    override fun startActivity(intent: Intent?) {
+        requiresActivityManager()
+        val component = intent?.component
+        val allowed =
+            (component?.packageName == "com.android.dynsystem" &&
+                component.className == "com.android.dynsystem.VerificationActivity") ||
+                (component?.packageName == BuildConfig.APPLICATION_ID &&
+                    component.className == "${BuildConfig.APPLICATION_ID}.MainActivity")
+        if (!allowed) {
+            throw SecurityException("Activity is not allowed")
+        }
+
+        val callerPackage =
+            if (uid == 2000 || uid == 0) "com.android.shell" else BuildConfig.APPLICATION_ID
+        if (Build.VERSION.SDK_INT > 29) {
+            ACTIVITY_MANAGER!!.startActivityAsUserWithFeature(
+                null, callerPackage, null, intent, null, null, null,
+                0, 0, null, null, 0,
+            )
+        } else {
+            ACTIVITY_MANAGER!!.startActivityAsUser(
+                null, callerPackage, intent, null, null, null,
+                0, 0, null, null, 0,
+            )
+        }
+    }
+
+    override fun forceStopPackage(packageName: String?) {
+        if (packageName != "com.android.dynsystem" && packageName != BuildConfig.APPLICATION_ID) {
+            throw SecurityException("Package is not allowed")
+        }
+        requiresActivityManager()
+        ACTIVITY_MANAGER!!.forceStopPackage(packageName, 0)
+    }
+
+    private var PACKAGE_MANAGER: IPackageManager? = null
+
+    private fun requiresPackageManager() {
+        if (PACKAGE_MANAGER == null) {
+            PACKAGE_MANAGER = IPackageManager.Stub.asInterface(getBinder("package"))
+        }
+    }
+
+    override fun grantPermission(permissionName: String?) {
+        if (permissionName != "android.permission.READ_LOGS") {
+            throw SecurityException("Permission is not allowed")
+        }
+        requiresPackageManager()
+        PACKAGE_MANAGER!!.grantRuntimePermission(BuildConfig.APPLICATION_ID, permissionName, 0)
     }
 
     private var STORAGE_MANAGER: IStorageManager? = null
