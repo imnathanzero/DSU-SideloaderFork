@@ -1,23 +1,33 @@
 package vegabobo.dsusideloader.ui.screen.home
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collectLatest
 import vegabobo.dsusideloader.R
+import vegabobo.dsusideloader.preparation.InstallationStep
 import vegabobo.dsusideloader.ui.cards.DsuInfoCard
 import vegabobo.dsusideloader.ui.cards.ImageSizeCard
 import vegabobo.dsusideloader.ui.cards.UserdataCard
@@ -44,6 +54,19 @@ object HomeLinks {
     const val DSU_DOCS = "https://source.android.com/devices/tech/ota/dynamic-system-updates"
 }
 
+private fun InstallationStep.isErrorStep(): Boolean =
+    this == InstallationStep.ERROR ||
+        this == InstallationStep.ERROR_CANCELED ||
+        this == InstallationStep.ERROR_REQUIRES_DISCARD_DSU ||
+        this == InstallationStep.ERROR_ALREADY_RUNNING_DYN_OS ||
+        this == InstallationStep.ERROR_CREATE_PARTITION ||
+        this == InstallationStep.ERROR_EXTERNAL_SDCARD_ALLOC ||
+        this == InstallationStep.ERROR_NO_AVAIL_STORAGE ||
+        this == InstallationStep.ERROR_F2FS_WRONG_PATH ||
+        this == InstallationStep.ERROR_EXTENTS ||
+        this == InstallationStep.ERROR_SELINUX ||
+        this == InstallationStep.ERROR_SELINUX_ROOTLESS
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Home(
@@ -52,6 +75,8 @@ fun Home(
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    var showErrorDialog by remember { mutableStateOf(false) }
 
     if (uiState.shouldKeepScreenOn) {
         KeepScreenOn()
@@ -61,6 +86,36 @@ fun Home(
         homeViewModel.setupUserPreferences()
         homeViewModel.session.operationMode.collectLatest {
             homeViewModel.initialChecks()
+        }
+    }
+
+    LaunchedEffect(
+        uiState.installationCard.installationStep,
+        uiState.installationCard.errorText,
+    ) {
+        if (uiState.installationCard.installationStep.isErrorStep()) {
+            showErrorDialog = true
+        }
+    }
+
+    val errorDetails = remember(
+        uiState.installationCard.installationStep,
+        uiState.installationCard.errorText,
+        uiState.installationLogs,
+    ) {
+        buildString {
+            append("Installation step: ")
+            append(uiState.installationCard.installationStep)
+            append('\n')
+            if (uiState.installationCard.errorText.isNotBlank()) {
+                append("Error detail: ")
+                append(uiState.installationCard.errorText)
+                append('\n')
+            }
+            if (uiState.installationLogs.isNotBlank()) {
+                append("\nInstallation log:\n")
+                append(uiState.installationLogs)
+            }
         }
     }
 
@@ -80,7 +135,7 @@ fun Home(
                 when (uiState.additionalCard) {
                     AdditionalCardState.NO_DYNAMIC_PARTITIONS ->
                         UnsupportedCard(
-                            onClickClose = { exitProcess(0) },
+                            onClickClose = { android.os.Process.killProcess(android.os.Process.myPid()) },
                             onClickContinueAnyway = { homeViewModel.overrideDynamicPartitionCheck() },
                         )
 
@@ -128,8 +183,10 @@ fun Home(
                 UserdataCard(
                     isEnabled = uiState.isInstalling(),
                     uiState = uiState.userDataCard,
+                    isDsuInstalled = uiState.installationCard.installationStep == InstallationStep.DSU_ALREADY_INSTALLED,
                     onCheckedChange = { homeViewModel.onCheckUserdataCard() },
                     onValueChange = { homeViewModel.updateUserdataSize(it) },
+                    onPreserveCheckedChange = { homeViewModel.session.preferences.preserveUserdata = it },
                 )
                 ImageSizeCard(
                     isEnabled = uiState.isInstalling(),
@@ -144,6 +201,30 @@ fun Home(
             }
         },
     )
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = { Text(stringResource(id = R.string.installation_error_details)) },
+            text = { Text(errorDetails) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("DSU installation log", errorDetails))
+                        showErrorDialog = false
+                    },
+                ) {
+                    Text(stringResource(id = R.string.copy_log_and_close))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showErrorDialog = false }) {
+                    Text(stringResource(id = R.string.close))
+                }
+            },
+        )
+    }
 
     when (uiState.sheetDisplay) {
         SheetDisplayState.CONFIRM_INSTALLATION ->
