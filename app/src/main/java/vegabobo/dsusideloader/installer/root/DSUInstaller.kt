@@ -49,6 +49,7 @@ class DSUInstaller(
     private val onCreatePartition: (partition: String) -> Unit,
     private val onInstallationStepUpdate: (step: InstallationStep) -> Unit,
     private val onInstallationSuccess: () -> Unit,
+    private val preserveUserdata: Boolean = false,
 ) : () -> Unit, DynamicSystemImpl() {
 
     private val tag = this.javaClass.simpleName
@@ -254,18 +255,26 @@ class DSUInstaller(
                 onInstallationError(InstallationStep.ERROR_ALREADY_RUNNING_DYN_OS, "")
                 return
             }
-            if (isInstalled) {
+
+            val wasInstalled = isInstalled
+            if (wasInstalled && !preserveUserdata) {
                 onInstallationError(InstallationStep.ERROR_REQUIRES_DISCARD_DSU, "")
                 return
             }
+
             forceStopDSU()
             if (!startInstallation(Constants.DEFAULT_SLOT)) {
-                onInstallationError(InstallationStep.ERROR_CREATE_PARTITION, Constants.DEFAULT_SLOT)
+                onInstallationError(
+                    InstallationStep.ERROR_CREATE_PARTITION,
+                    "Failed to start DSU installation for slot ${Constants.DEFAULT_SLOT}",
+                )
                 return
             }
             installationStarted = true
 
-            installWritablePartition("userdata", userdataSize)
+            if (!preserveUserdata || !wasInstalled) {
+                installWritablePartition("userdata", userdataSize)
+            }
             if (installationJob.isCancelled) return
 
             when (dsuInstallation.type) {
@@ -298,7 +307,10 @@ class DSUInstaller(
             if (installationJob.isCancelled) return
 
             if (!finishInstallation()) {
-                onInstallationError(InstallationStep.ERROR_CREATE_PARTITION, Constants.DEFAULT_SLOT)
+                onInstallationError(
+                    InstallationStep.ERROR_CREATE_PARTITION,
+                    "Failed to finish DSU installation for slot ${Constants.DEFAULT_SLOT}",
+                )
                 return
             }
             installationFinished = true
