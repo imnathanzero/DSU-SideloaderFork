@@ -58,6 +58,8 @@ data class HomeUiState(
 ) {
     fun isInstalling(): Boolean {
         return installationCard.installationStep != InstallationStep.NOT_INSTALLING &&
-            installationCard.installationStep != InstallationStep.DSU_ALREADY_INSTALLED
+            installationCard.installationStep != InstallationStep.DSU_ALREADY_INSTALLED &&
+            installationCard.installationStep != InstallationStep.INSTALL_SUCCESS &&
+            installationCard.installationStep != InstallationStep.INSTALL_SUCCESS_REBOOT_DYN_OS
     }
 }
