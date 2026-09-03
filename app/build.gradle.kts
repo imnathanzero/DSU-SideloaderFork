@@ -39,15 +39,6 @@ android {
         val releaseSigningConfig = getReleaseSigningConfig()
         if (releaseSigningConfig.exists()) {
             create("release") {
-                /**
-                 * .sign/dsu_sideloader.prop
-                 *
-                 * keystore=some/path/keystore.jks
-                 * keystore_pw=keystore_password
-                 * alias=alias
-                 * alias_pw=alias_password
-                 *
-                 */
                 val props = Properties()
                 props.load(releaseSigningConfig.inputStream())
 
@@ -108,7 +99,6 @@ android {
 }
 
 aboutLibraries {
-    // Remove the "generated" timestamp to allow for reproducible builds
     excludeFields = arrayOf("generated")
 }
 
@@ -156,6 +146,8 @@ dependencies {
     implementation("org.lsposed.hiddenapibypass:hiddenapibypass:_")
 
     compileOnly(project(":hidden-api-stub"))
+
+    testImplementation("junit:junit:4.13.2")
 }
 
 tasks {
