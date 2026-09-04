@@ -6,7 +6,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -17,15 +19,20 @@ fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     barTitle: String,
     icon: ImageVector? = null,
-    iconContentDescription: String? = "icon",
+    iconContentDescription: String? = null,
     onClickIcon: () -> Unit = {},
     onClickBackButton: (() -> Unit)? = null,
 ) {
     LargeTopAppBar(
-        title = { Text(text = barTitle) },
+        title = {
+            Text(
+                text = barTitle,
+                style = MaterialTheme.typography.headlineSmall,
+            )
+        },
         navigationIcon = {
             if (onClickBackButton != null) {
-                IconButton(onClickBackButton) {
+                IconButton(onClick = onClickBackButton) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowBack,
                         contentDescription = iconContentDescription,
@@ -35,7 +42,7 @@ fun TopBar(
         },
         actions = {
             if (icon != null) {
-                IconButton(onClickIcon) {
+                IconButton(onClick = onClickIcon) {
                     Icon(
                         imageVector = icon,
                         contentDescription = iconContentDescription,
@@ -43,6 +50,10 @@ fun TopBar(
                 }
             }
         },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
         scrollBehavior = scrollBehavior,
     )
 }

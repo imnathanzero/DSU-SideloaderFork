@@ -7,6 +7,7 @@ fun getReleaseSigningConfig(): File {
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
     id("com.mikepenz.aboutlibraries.plugin")
@@ -20,7 +21,7 @@ android {
     val packageName: String by rootProject.extra
 
     namespace = packageName
-    compileSdk = 33
+    compileSdk = 37
 
     defaultConfig {
         this.applicationId = packageName
@@ -87,9 +88,6 @@ android {
         aidl = true
         buildConfig = true
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.6"
     }
     packaging {
         resources {

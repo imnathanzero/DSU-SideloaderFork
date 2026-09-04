@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "vegabobo.dsusideloader"
-    compileSdk = 33
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 29

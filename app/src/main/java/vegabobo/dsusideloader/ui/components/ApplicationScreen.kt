@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
@@ -29,7 +30,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ApplicationScreen(
     modifier: Modifier = Modifier,
-    verticalArrangement: Arrangement.HorizontalOrVertical = Arrangement.spacedBy(0.dp),
+    verticalArrangement: Arrangement.HorizontalOrVertical = Arrangement.spacedBy(12.dp),
     columnContent: Boolean = true,
     enableDefaultScrollBehavior: Boolean = true,
     topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {},
@@ -51,10 +52,13 @@ fun ApplicationScreen(
         .only(WindowInsetsSides.Vertical)
         .asPaddingValues()
 
-    Surface {
+    Surface(
+        modifier = scrollBehaviorModifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface,
+    ) {
         Scaffold(
-            modifier = scrollBehaviorModifier
-                .fillMaxSize(),
+            containerColor = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxSize(),
             topBar = { topBar(scrollBehavior) },
             bottomBar = { bottomBar() },
             content = { innerPadding ->
@@ -71,7 +75,10 @@ fun ApplicationScreen(
                         Spacer(modifier = Modifier.padding(innerPadding.calculateBottomPadding()))
                     }
                 } else {
-                    Surface(modifier = modifier.padding(top = innerPadding.calculateTopPadding())) {
+                    Surface(
+                        modifier = modifier.padding(top = innerPadding.calculateTopPadding()),
+                        color = MaterialTheme.colorScheme.surface,
+                    ) {
                         content()
                         Spacer(modifier = Modifier.padding(innerPadding.calculateBottomPadding()))
                     }
