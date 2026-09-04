@@ -1,7 +1,6 @@
 buildscript {
     repositories { mavenCentral() }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.10")
         classpath(Google.dagger.hilt.android.gradlePlugin)
         classpath("org.jetbrains.kotlin:kotlin-serialization:_")
     }
@@ -10,7 +9,7 @@ buildscript {
 plugins {
     id("com.android.application") apply false
     id("com.android.library") apply false
-    id("com.android.legacy-kapt") version "9.1.1" apply false
+    id("com.google.devtools.ksp") apply false
 
     id("org.jetbrains.kotlin.multiplatform") apply false
     id("org.jetbrains.kotlin.plugin.serialization") apply false
