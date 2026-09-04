@@ -120,16 +120,6 @@
     <string name="preserve_userdata">Keep Userdata</string>
     <string name="preserve_userdata_desc">Keep the existing DSU userdata partition when updating.</string>
 
-    <!-- Image size card -->
-    <string name="image_size">Image size</string>
-    <string name="image_size_info">Size in bytes</string>
-    <string name="not_recommended_option">This option is strongly inadvisable!</string>
-
-    <!-- Image size dialog -->
-    <string name="dialog_image_size">Set image size?</string>
-    <string name="dialog_image_size_description">DSU Sideloader will set this parameter for you automatically, setting image size manually is strongly inadvisable.</string>
-    <string name="set_anyway">Set anyway</string>
-
     <!-- What is DSU card -->
     <string name="what_is_dsu">What is DSU?</string>
     <string name="what_is_dsu_description">DSU (Dynamic System Updates) is a feature introduced in Android 10 that allow developers to test Android system images without touching device partitions, with Android 11, DSU can also replace multiple partitions.</string>
