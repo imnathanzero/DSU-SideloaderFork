@@ -1,6 +1,7 @@
 buildscript {
     repositories { mavenCentral() }
     dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.10")
         classpath(Google.dagger.hilt.android.gradlePlugin)
         classpath("org.jetbrains.kotlin:kotlin-serialization:_")
     }
@@ -9,8 +10,8 @@ buildscript {
 plugins {
     id("com.android.application") apply false
     id("com.android.library") apply false
+    id("com.android.legacy-kapt") apply false
 
-    id("org.jetbrains.kotlin.android") apply false
     id("org.jetbrains.kotlin.multiplatform") apply false
     id("org.jetbrains.kotlin.plugin.serialization") apply false
     id("org.jetbrains.kotlin.plugin.compose") apply false
@@ -23,6 +24,6 @@ val versionCode by extra { 8 }
 val versionName by extra { "2.03" }
 val packageName by extra { "vegabobo.dsusideloader" }
 
-task("clean") {
-    delete(project.buildDir)
+tasks.register("clean") {
+    delete(layout.buildDirectory)
 }
