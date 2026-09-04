@@ -15,106 +15,118 @@ plugins {
 }
 
 android {
-    namespace = "vegabobo.dsusideloader"
+    val versionCode: Int by rootProject.extra
+    val versionName: String by rootProject.extra
+    val packageName: String by rootProject.extra
+
+    namespace = packageName
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "vegabobo.dsusideloader"
+        this.applicationId = packageName
+        this.versionCode = versionCode
+        this.versionName = versionName
+
         minSdk = 29
         targetSdk = 33
-        versionCode = project.extra["versionCode"] as Int
-        versionName = project.extra["versionName"] as String
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+    signingConfigs {
+        val releaseSigningConfig = getReleaseSigningConfig()
+        if (releaseSigningConfig.exists()) {
+            create("release") {
+                val props = Properties()
+                props.load(releaseSigningConfig.inputStream())
 
-            val propertiesFile = getReleaseSigningConfig()
-            if (propertiesFile.exists()) {
-                val properties = Properties().apply {
-                    propertiesFile.inputStream().use { load(it) }
-                }
-                signingConfigs.create("release") {
-                    storeFile = file(properties.getProperty("storeFile"))
-                    storePassword = properties.getProperty("storePassword")
-                    keyAlias = properties.getProperty("keyAlias")
-                    keyPassword = properties.getProperty("keyPassword")
-                }
-                signingConfig = signingConfigs.getByName("release")
+                storeFile = File(props.getProperty("keystore"))
+                storePassword = props.getProperty("keystore_pw")
+                keyAlias = props.getProperty("alias")
+                keyPassword = props.getProperty("alias_pw")
             }
         }
     }
 
-    flavorDimensions += "variant"
-
-    productFlavors {
-        create("mini") {
-            dimension = "variant"
+    buildTypes {
+        getByName("release") {
+            if (getReleaseSigningConfig().exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
-        create("full") {
-            dimension = "variant"
+        create("miniDebug") {
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = true
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlin {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
-
     buildFeatures {
-        compose = true
+        aidl = true
         buildConfig = true
+        compose = true
     }
-
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
 
-    sourceSets {
-        getByName("main") {
-            manifest.srcFile("src/main/AndroidManifest.xml")
-        }
-    }
+aboutLibraries {
+    excludeFields = arrayOf("generated")
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.activity:activity-compose:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
-    implementation("androidx.compose.ui:ui:1.12.0")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.12.0")
-    implementation("androidx.compose.runtime:runtime:1.12.0")
-    implementation("androidx.compose.material:material:1.9.0")
-    implementation("androidx.compose.material3:material3:1.5.0-alpha27")
-    implementation("androidx.navigation:navigation-compose:2.9.8")
-    implementation("androidx.preference:preference-ktx:1.2.0")
-    implementation("androidx.datastore:datastore-preferences:1.1.7")
+    implementation(AndroidX.appCompat)
+    implementation(AndroidX.dataStore.preferences)
 
-    implementation("com.google.dagger:hilt-android:_")
-    implementation("androidx.hilt:hilt-navigation-compose:1.4.0")
-    ksp("com.google.dagger:hilt-compiler:2.60.1")
+    implementation(AndroidX.activity.compose)
+    implementation(AndroidX.lifecycle.viewModelCompose)
+    implementation(AndroidX.navigation.compose)
+    implementation(AndroidX.compose.material3)
+    implementation(AndroidX.compose.material)
+    implementation(AndroidX.compose.runtime.liveData)
+    implementation(AndroidX.compose.material.icons.extended)
+    implementation(AndroidX.compose.ui.toolingPreview)
+    implementation(AndroidX.compose.ui)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation(AndroidX.core.ktx)
+    implementation(AndroidX.fragment.ktx)
+    implementation(AndroidX.preference.ktx)
+    implementation(AndroidX.lifecycle.runtime.ktx)
+
+    implementation(Google.dagger.hilt.android)
+    implementation(AndroidX.hilt.navigationCompose)
+    ksp(Google.dagger.hilt.compiler)
+
+    implementation(Google.android.material)
+    implementation(KotlinX.serialization.json)
+
+    implementation("com.github.topjohnwu.libsu:core:_")
+    implementation("com.github.topjohnwu.libsu:service:_")
+
     implementation("org.tukaani:xz:_")
     implementation("org.apache.commons:commons-compress:_")
 
