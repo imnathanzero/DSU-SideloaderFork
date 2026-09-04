@@ -6,7 +6,7 @@ fun getReleaseSigningConfig(): File {
 
 plugins {
     id("com.android.application")
-    id("com.android.legacy-kapt")
+    id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
     id("dagger.hilt.android.plugin")
     id("com.mikepenz.aboutlibraries.plugin")
@@ -77,11 +77,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     kotlin {
-        jvmToolchain(17)
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
     buildFeatures {
         aidl = true
@@ -97,10 +96,6 @@ android {
 
 aboutLibraries {
     excludeFields = arrayOf("generated")
-}
-
-kotlin.sourceSets.all {
-    languageSettings.optIn("kotlin.RequiresOptIn")
 }
 
 dependencies {
@@ -124,7 +119,7 @@ dependencies {
 
     implementation(Google.dagger.hilt.android)
     implementation(AndroidX.hilt.navigationCompose)
-    kapt(Google.dagger.hilt.compiler)
+    ksp(Google.dagger.hilt.compiler)
 
     implementation(Google.android.material)
     implementation(KotlinX.serialization.json)
