@@ -1,7 +1,5 @@
 package vegabobo.dsusideloader.installer.adb
 
-import vegabobo.dsusideloader.model.DSUConstants
-
 class InstallationCmdline(
     private val parameters: Triple<Long, String, Long>,
 ) {
@@ -22,7 +20,7 @@ class InstallationCmdline(
 
         arguments += addArgument("-d", gsiFileAbsolutePath)
         arguments += addArgument("--el", "KEY_USERDATA_SIZE", userdataSize)
-        if (imageFileSize != DSUConstants.DEFAULT_IMAGE_SIZE) {
+        if (imageFileSize >= 0) {
             arguments += addArgument("--el", "KEY_SYSTEM_SIZE", imageFileSize)
         }
 

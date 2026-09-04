@@ -3,14 +3,14 @@ package vegabobo.dsusideloader.model
 import android.net.Uri
 
 object DSUConstants {
-    const val DEFAULT_IMAGE_SIZE = -1L
+    const val DEFAULT_FILE_SIZE = -1L
     const val DEFAULT_USERDATA = 2L * 1024L * 1024L * 1024L
 }
 
 open class ImagePartition(
     var partitionName: String,
     var uri: Uri = Uri.EMPTY,
-    var fileSize: Long = DSUConstants.DEFAULT_IMAGE_SIZE,
+    var fileSize: Long = DSUConstants.DEFAULT_FILE_SIZE,
 )
 
 enum class Type {
@@ -20,13 +20,13 @@ enum class Type {
 open class DSUInstallationSource(
     open var type: Type = Type.NONE,
     open var uri: Uri = Uri.EMPTY,
-    open var fileSize: Long = DSUConstants.DEFAULT_IMAGE_SIZE,
+    open var fileSize: Long = DSUConstants.DEFAULT_FILE_SIZE,
     open val images: List<ImagePartition> = listOf(),
 ) {
 
     data class SingleSystemImage(
         override var uri: Uri = Uri.EMPTY,
-        override var fileSize: Long = DSUConstants.DEFAULT_IMAGE_SIZE,
+        override var fileSize: Long = DSUConstants.DEFAULT_FILE_SIZE,
         override var type: Type = Type.SINGLE_SYSTEM_IMAGE,
     ) : DSUInstallationSource(Type.SINGLE_SYSTEM_IMAGE)
 
