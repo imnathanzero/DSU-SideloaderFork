@@ -6,9 +6,8 @@ fun getReleaseSigningConfig(): File {
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    id("com.android.legacy-kapt")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
     id("com.mikepenz.aboutlibraries.plugin")
     id("kotlinx-serialization")
