@@ -4,6 +4,15 @@ pluginManagement {
         google()
         mavenCentral()
     }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == "com.android.legacy-kapt") {
+                useModule(
+                    "com.android.legacy-kapt:com.android.legacy-kapt.gradle.plugin:${requested.version}"
+                )
+            }
+        }
+    }
 }
 
 plugins {
