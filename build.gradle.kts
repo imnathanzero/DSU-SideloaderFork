@@ -10,7 +10,7 @@ buildscript {
 plugins {
     id("com.android.application") apply false
     id("com.android.library") apply false
-    id("com.android.legacy-kapt") apply false
+    id("com.android.legacy-kapt") version "9.1.1" apply false
 
     id("org.jetbrains.kotlin.multiplatform") apply false
     id("org.jetbrains.kotlin.plugin.serialization") apply false
