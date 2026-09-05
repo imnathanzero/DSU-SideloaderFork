@@ -2,17 +2,17 @@ package vegabobo.dsusideloader.ui.components
 
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +35,6 @@ fun ApplicationScreen(
     enableDefaultScrollBehavior: Boolean = true,
     topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
-    outsideContent: @Composable (PaddingValues) -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
     val decayAnimationSpec = rememberSplineBasedDecay<Float>()
@@ -47,15 +46,18 @@ fun ApplicationScreen(
     val scrollBehaviorModifier =
         if (enableDefaultScrollBehavior) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier
 
-    val insets = WindowInsets
-        .systemBars
-        .only(WindowInsetsSides.Vertical)
-        .asPaddingValues()
-
     Surface {
         Scaffold(
             modifier = scrollBehaviorModifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                // Vertical insets are handled per-slot below, but nothing used to keep
+                // content clear of a side navigation bar or a display cutout, so in
+                // landscape the top bar title and the cards ran underneath both. The
+                // padding sits on the Scaffold rather than on the Surface so the
+                // background still paints edge to edge behind the bar.
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
+                ),
             topBar = { topBar(scrollBehavior) },
             bottomBar = { bottomBar() },
             content = { innerPadding ->
@@ -75,14 +77,21 @@ fun ApplicationScreen(
                         )
                     }
                 } else {
-                    Surface(modifier = modifier.padding(top = innerPadding.calculateTopPadding())) {
+                    // Content that scrolls itself (a LazyColumn, for instance) only needs the
+                    // scaffold insets as padding, so it starts below the top bar and ends above
+                    // the navigation bar instead of underneath either.
+                    Box(
+                        modifier = modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = innerPadding.calculateTopPadding(),
+                                bottom = innerPadding.calculateBottomPadding(),
+                            ),
+                    ) {
                         content()
-                        Spacer(modifier = Modifier.padding(innerPadding.calculateBottomPadding()))
                     }
                 }
             },
         )
     }
-
-    outsideContent(insets)
 }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import vegabobo.dsusideloader.model.DSUConstants
 import vegabobo.dsusideloader.model.Session
 import vegabobo.dsusideloader.service.PrivilegedProvider
 
@@ -46,7 +47,11 @@ open class DsuInstallationHandler(
             dynIntent.action = "android.os.image.action.START_INSTALL"
             dynIntent.data = fileUri
             dynIntent.putExtra("KEY_USERDATA_SIZE", userdataSize)
-            dynIntent.putExtra("KEY_SYSTEM_SIZE", length)
+            // A .zip DSU package has no single known image size, and passing -1 makes
+            // com.android.dynsystem reject the request. Only send it when it is real.
+            if (length != DSUConstants.DEFAULT_IMAGE_SIZE) {
+                dynIntent.putExtra("KEY_SYSTEM_SIZE", length)
+            }
 
             Log.d(tag, "Starting DSU VerificationActivity: $dynIntent")
             startActivity(dynIntent)
@@ -65,12 +70,18 @@ open class DsuInstallationHandler(
             }
         if (volumesUnmount.size > 0) {
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-                delay(30 * 1000)
+                // Matches the 60s the generated adb script waits: long enough for
+                // com.android.dynsystem to have picked its allocation target.
+                delay(REMOUNT_DELAY_MS)
                 for (volume in volumesUnmount) {
                     Log.d(tag, "Volume remounted: $volume")
                     PrivilegedProvider.run { mount(volume) }
                 }
             }
         }
+    }
+
+    private companion object {
+        const val REMOUNT_DELAY_MS = 60L * 1000L
     }
 }

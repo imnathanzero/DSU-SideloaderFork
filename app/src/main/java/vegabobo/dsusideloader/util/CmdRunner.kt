@@ -8,6 +8,10 @@ import java.io.InputStreamReader
 
 object CmdRunner {
 
+    // Android has no /bin/sh before API 30, and even then only as a symlink.
+    private const val SHELL = "/system/bin/sh"
+
+    @Volatile
     var process: Process? = null
 
     fun run(cmd: String): String {
@@ -32,23 +36,36 @@ object CmdRunner {
     }
 
     private fun runCommand(cmd: String, onReceive: (String) -> Unit) {
-        process = ProcessBuilder("/bin/sh", "-c", cmd).start()
-        val bufferedReader = BufferedReader(InputStreamReader(process!!.inputStream))
+        // Fold stderr into stdout: without this the error pipe fills up and the child
+        // process blocks forever once it writes more than the pipe buffer.
+        val started = ProcessBuilder(SHELL, "-c", cmd)
+            .redirectErrorStream(true)
+            .start()
+        process = started
         try {
-            var line: String
-            while (bufferedReader.readLine().also { line = it ?: "" } != null) {
-                if (line.isNotEmpty()) onReceive(line)
+            BufferedReader(InputStreamReader(started.inputStream)).use { reader ->
+                while (true) {
+                    val line = reader.readLine() ?: break
+                    if (line.isNotEmpty()) onReceive(line)
+                }
             }
+            started.waitFor()
         } catch (_: IOException) {
+        } catch (_: InterruptedException) {
+        } finally {
+            started.destroy()
+            if (process === started) {
+                process = null
+            }
         }
     }
 
     private fun runCommand(cmd: String): String {
-        var output = ""
+        val output = StringBuilder()
         runCommand(cmd) {
-            output += "$it\n"
+            output.append(it).append('\n')
         }
-        return output
+        return output.toString()
     }
 
     fun destroy() {
@@ -57,9 +74,7 @@ object CmdRunner {
             Shell.getShell()
             return
         }
-        if (process != null) {
-            process!!.destroy()
-            process = null
-        }
+        process?.destroy()
+        process = null
     }
 }

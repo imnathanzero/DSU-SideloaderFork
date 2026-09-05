@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import vegabobo.dsusideloader.ui.theme.Shapes
+import vegabobo.dsusideloader.ui.theme.cardContainerHigh
 
 @Composable
 fun DialogItem(
@@ -30,7 +31,7 @@ fun DialogItem(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = Shapes.small,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.cardContainerHigh,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

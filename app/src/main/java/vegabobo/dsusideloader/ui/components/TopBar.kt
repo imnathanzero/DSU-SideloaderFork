@@ -13,6 +13,9 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import vegabobo.dsusideloader.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,7 +23,9 @@ fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     barTitle: String,
     icon: ImageVector? = null,
-    iconContentDescription: String? = "icon",
+    // Screen readers announce this, so it has to be a translated string. Screens that
+    // pass an action icon describe it; the fallback names the screen the icon opens.
+    iconContentDescription: String? = null,
     onClickIcon: () -> Unit = {},
     onClickBackButton: (() -> Unit)? = null,
 ) {
@@ -29,6 +34,9 @@ fun TopBar(
             Text(
                 text = barTitle,
                 style = MaterialTheme.typography.headlineMedium,
+                // A long localized title used to be clipped mid-glyph by the bar.
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         },
         navigationIcon = {
@@ -36,7 +44,7 @@ fun TopBar(
                 IconButton(onClickBackButton) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowBack,
-                        contentDescription = iconContentDescription,
+                        contentDescription = stringResource(id = R.string.mreturn),
                     )
                 }
             }
@@ -46,7 +54,8 @@ fun TopBar(
                 IconButton(onClickIcon) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = iconContentDescription,
+                        contentDescription = iconContentDescription
+                            ?: stringResource(id = R.string.settings),
                     )
                 }
             }

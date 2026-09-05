@@ -3,6 +3,7 @@ package vegabobo.dsusideloader.ui.cards.updater
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,8 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +38,8 @@ import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 import vegabobo.dsusideloader.ui.components.buttons.SecondaryButton
 import vegabobo.dsusideloader.ui.screen.about.UpdateStatus
 import vegabobo.dsusideloader.ui.screen.about.UpdaterCardState
+import vegabobo.dsusideloader.ui.theme.accentHalo
+import vegabobo.dsusideloader.ui.theme.cardContainerHighest
 
 @Composable
 fun UpdaterCard(
@@ -71,9 +72,20 @@ fun UpdaterCard(
                 modifier = Modifier
                     .padding(top = 24.dp, bottom = 8.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.inverseOnSurface,
+                color = MaterialTheme.colorScheme.cardContainerHighest,
             ) {
-                Box {
+                Box(
+                    // A wash of the two accent hues the wallpaper produced, so the one
+                    // decorative surface in the app actually shows the extracted color
+                    // instead of being a third neutral container. The disc is wider than
+                    // the icon on purpose, otherwise the icon covers the whole halo.
+                    modifier = Modifier
+                        .size(120.dp)
+                        .background(
+                            brush = MaterialTheme.colorScheme.accentHalo,
+                            shape = CircleShape,
+                        ),
+                ) {
                     val progressBarModifier = Modifier
                         .size(104.dp)
                         .align(Alignment.Center)
@@ -87,9 +99,8 @@ fun UpdaterCard(
                         )
                     }
 
-                    val selected = remember { mutableStateOf(false) }
-                    val scale = animateFloatAsState(if (selected.value) 0.75f else 1f)
-                    selected.value = isDownloading()
+                    // Derived straight from the state — no mutable holder written during composition.
+                    val scale = animateFloatAsState(if (isDownloading()) 0.75f else 1f)
                     Image(
                         modifier = Modifier
                             .size(96.dp)
@@ -98,7 +109,7 @@ fun UpdaterCard(
                             .align(Alignment.Center)
                             .clickable { onClickImage() },
                         painter = painterResource(id = R.drawable.app_icon_mini),
-                        contentDescription = "App icon",
+                        contentDescription = stringResource(id = R.string.app_name),
                     )
                 }
             }
@@ -131,10 +142,14 @@ fun UpdaterCard(
                     UpdateStatus.UPDATE_FOUND ->
                         stringResource(R.string.check_updates_text_found, uiState.updateVersion)
 
+                    UpdateStatus.FAILED ->
+                        stringResource(id = R.string.check_updates_text_failed)
+
                     else ->
                         stringResource(id = R.string.check_updates_text_idle)
                 },
                 icon = Icons.Outlined.Update,
+                isEnabled = !isDownloading(),
                 onClick = { onClickCheckUpdates() },
             )
             AnimatedVisibility(visible = isUpdateFound()) {

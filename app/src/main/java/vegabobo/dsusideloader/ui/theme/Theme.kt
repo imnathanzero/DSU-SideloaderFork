@@ -9,7 +9,12 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -43,6 +48,7 @@ private val DarkColorScheme = darkColorScheme(
     onErrorContainer = Error90,
     outline = NeutralVariant60,
     outlineVariant = NeutralVariant30,
+    scrim = Color.Black,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -74,6 +80,7 @@ private val LightColorScheme = lightColorScheme(
     onErrorContainer = Error10,
     outline = NeutralVariant50,
     outlineVariant = NeutralVariant80,
+    scrim = Color.Black,
 )
 
 @Composable
@@ -83,21 +90,41 @@ fun DSUHelperTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val context = LocalContext.current
+    // Building a dynamic scheme reads 60-odd platform color resources; a wallpaper
+    // change restarts the activity, so the result is stable for this composition.
+    val useDynamicColor = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val colorScheme = remember(darkTheme, useDynamicColor, context) {
+        when {
+            useDynamicColor ->
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+
+            darkTheme -> DarkColorScheme
+            else -> LightColorScheme
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
     }
+
+    // The container ladder reads the same platform palette, so it is memoized alongside
+    // the scheme rather than recomputed on every read of a cardContainer* property.
+    val surfaceTones = remember(colorScheme, darkTheme, useDynamicColor, context) {
+        surfaceTonesFor(context, colorScheme, darkTheme, useDynamicColor)
+    }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
+        // Taken from the scheme rather than from darkTheme: the bars sit on top of
+        // whatever the scheme actually resolved to, including a wallpaper-derived one.
+        val lightBarIcons = colorScheme.surface.luminance() > 0.5F
         SideEffect {
-            val window = (view.context as Activity).window
+            val window = (view.context as? Activity)?.window ?: return@SideEffect
+            window.statusBarColor = Color.Transparent.toArgb()
+            window.navigationBarColor = Color.Transparent.toArgb()
+            // Without this the platform draws a translucent scrim behind a transparent
+            // navigation bar, which reads as a grey band across the bottom of the app.
+            window.isNavigationBarContrastEnforced = false
             val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = !darkTheme
-            insetsController.isAppearanceLightNavigationBars = !darkTheme
+            insetsController.isAppearanceLightStatusBars = lightBarIcons
+            insetsController.isAppearanceLightNavigationBars = lightBarIcons
         }
     }
 
@@ -105,6 +132,7 @@ fun DSUHelperTheme(
         colorScheme = colorScheme,
         typography = Typography,
         shapes = Shapes,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(LocalSurfaceTones provides surfaceTones, content = content)
+    }
 }

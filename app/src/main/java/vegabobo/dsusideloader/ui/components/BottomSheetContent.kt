@@ -32,7 +32,10 @@ fun BottomSheetContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F),
+            // `outlineVariant` is the role Material uses for a drag handle; a
+            // translucent `onSurfaceVariant` composited differently on every sheet
+            // background and read almost black on a light dynamic scheme.
+            color = MaterialTheme.colorScheme.outlineVariant,
             shape = CircleShape,
             modifier = Modifier
                 .height(4.dp)

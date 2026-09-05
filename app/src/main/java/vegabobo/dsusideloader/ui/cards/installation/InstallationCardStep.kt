@@ -10,6 +10,16 @@ import vegabobo.dsusideloader.ui.cards.installation.content.NotInstallingCardCon
 import vegabobo.dsusideloader.ui.cards.installation.content.ProgressableCardContent
 import vegabobo.dsusideloader.ui.screen.home.InstallationCardState
 
+/**
+ * Appends [detail] to [message] on its own line.
+ *
+ * The error strings are shared with translations that carry no `%s` placeholder, so
+ * passing the detail to `stringResource` as a format argument would drop it — and in
+ * a locale whose text happens to contain a stray `%` it throws instead.
+ */
+private fun withDetail(message: String, detail: String): String =
+    if (detail.isBlank()) message else "$message\n\n$detail"
+
 @Composable
 fun InstallationCardStep(
     uiState: InstallationCardState,
@@ -155,7 +165,9 @@ fun InstallationCardStep(
             )
         InstallationStep.ERROR ->
             ProgressableCardContent(
-                text = stringResource(R.string.unknown_error, uiState.errorText),
+                // unknown_error carries no placeholder, so the detail is appended instead
+                // of being passed as a format argument and silently dropped.
+                text = withDetail(stringResource(R.string.unknown_error), uiState.errorText),
                 textFirstButton = stringResource(id = R.string.view_logs),
                 onClickFirstButton = onClickViewLogs,
                 textSecondButton = stringResource(id = R.string.mreturn),
@@ -185,14 +197,19 @@ fun InstallationCardStep(
             )
         InstallationStep.ERROR_CREATE_PARTITION ->
             ProgressableCardContent(
-                text = stringResource(R.string.failed_create_partition),
+                // DSUInstaller reports the failing partition as the error content, so it
+                // lands in errorText; currentPartitionText only tracks installation progress.
+                text = stringResource(R.string.failed_create_partition, uiState.errorText),
+                textFirstButton = stringResource(id = R.string.view_logs),
+                onClickFirstButton = onClickViewLogs,
                 textSecondButton = stringResource(id = R.string.mreturn),
                 onClickSecondButton = onClickClear,
             )
         InstallationStep.ERROR_EXTERNAL_SDCARD_ALLOC ->
             ProgressableCardContent(
-                text = stringResource(
-                    R.string.allocation_error_description,
+                // The description names the fixes to try; the raw error goes underneath it.
+                text = withDetail(
+                    stringResource(R.string.allocation_error_description),
                     uiState.errorText,
                 ),
                 textFirstButton = stringResource(id = R.string.allocation_error_action),
@@ -210,8 +227,8 @@ fun InstallationCardStep(
             )
         InstallationStep.ERROR_F2FS_WRONG_PATH ->
             ProgressableCardContent(
-                text = stringResource(
-                    R.string.fs_features_error_description,
+                text = withDetail(
+                    stringResource(R.string.fs_features_error_description),
                     uiState.errorText,
                 ),
                 textFirstButton = stringResource(id = R.string.view_logs),

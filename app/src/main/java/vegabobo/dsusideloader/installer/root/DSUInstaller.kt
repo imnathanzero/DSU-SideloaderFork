@@ -103,10 +103,14 @@ class DSUInstaller(
     ) {
         val job = Job()
         CoroutineScope(Dispatchers.IO + job).launch {
-            if (!createNewPartition(partition, partitionSize, readOnly)) {
-                return@launch
+            // A Job passed as the parent context is never completed by its children
+            // finishing, so an early return used to leave the polling loop below
+            // spinning forever — the card stayed on "creating partition" for good.
+            try {
+                createNewPartition(partition, partitionSize, readOnly)
+            } finally {
+                job.complete()
             }
-            job.complete()
         }
         publishProgress(0L, partitionSize, partition)
         var prevInstalledSize = 0L
@@ -264,8 +268,10 @@ class DSUInstaller(
 
             forceStopDSU()
             if (!startInstallation(Constants.DEFAULT_SLOT)) {
+                // Not ERROR_CREATE_PARTITION: that step formats its message with a
+                // partition name, and no partition has been named yet.
                 onInstallationError(
-                    InstallationStep.ERROR_CREATE_PARTITION,
+                    InstallationStep.ERROR,
                     "Failed to start DSU installation for slot ${Constants.DEFAULT_SLOT}",
                 )
                 return
@@ -308,7 +314,7 @@ class DSUInstaller(
 
             if (!finishInstallation()) {
                 onInstallationError(
-                    InstallationStep.ERROR_CREATE_PARTITION,
+                    InstallationStep.ERROR,
                     "Failed to finish DSU installation for slot ${Constants.DEFAULT_SLOT}",
                 )
                 return
@@ -320,7 +326,7 @@ class DSUInstaller(
             if (!installationJob.isCancelled) {
                 installationJob.cancel()
                 onInstallationError(
-                    InstallationStep.ERROR_CREATE_PARTITION,
+                    InstallationStep.ERROR,
                     e.message ?: e.javaClass.simpleName,
                 )
             }

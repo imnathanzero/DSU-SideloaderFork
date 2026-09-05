@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -20,8 +22,10 @@ fun DsuInfoCard(
 ) {
     SimpleCard(
         modifier = modifier,
+        cardIcon = Icons.Outlined.HelpOutline,
         cardTitle = stringResource(id = R.string.what_is_dsu),
         text = stringResource(id = R.string.what_is_dsu_description),
+        justifyText = true,
     ) {
         Row(modifier = Modifier.padding(top = 8.dp)) {
             Spacer(modifier = Modifier.weight(1F))

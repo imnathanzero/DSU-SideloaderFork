@@ -16,13 +16,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import vegabobo.dsusideloader.ui.theme.Shapes
+import vegabobo.dsusideloader.ui.theme.cardContainerHighest
 
 @Composable
 fun LogcatCard(
     logs: String,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.cardContainerHighest,
         shape = Shapes.medium,
         modifier = Modifier
             .fillMaxWidth()

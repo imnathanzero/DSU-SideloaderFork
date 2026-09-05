@@ -10,7 +10,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -34,11 +33,10 @@ import vegabobo.dsusideloader.ui.theme.ScreenHorizontalPadding
 fun LibrariesScreen(
     navigate: (String) -> Unit,
 ) {
-    val libs = remember { mutableStateOf<Libs?>(null) }
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    libs.value = Libs.Builder().withContext(context).build()
-    val libraries = libs.value!!.libraries
+    // Parsing the bundled library metadata is expensive, so keep it out of recomposition.
+    val libraries = remember(context) { Libs.Builder().withContext(context).build().libraries }
 
     val appBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(appBarState)
@@ -64,10 +62,8 @@ fun LibrariesScreen(
             items(libraries.size) {
                 val thisLibrary = libraries[it]
                 val name = thisLibrary.name
-                var licenses = ""
-                for (license in thisLibrary.licenses) {
-                    licenses += license.name
-                }
+                // Separate the license names, otherwise multi-licensed entries read as "MITApache-2.0".
+                val licenses = thisLibrary.licenses.joinToString(", ") { license -> license.name }
                 val urlToOpen = thisLibrary.website ?: ""
                 DynamicListItem(listLength = libraries.size - 1, currentValue = it) {
                     PreferenceItem(

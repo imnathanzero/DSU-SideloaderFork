@@ -28,7 +28,6 @@ fun UserdataCard(
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
     onCheckedChange: (Boolean) -> Unit = {},
-    onPreserveCheckedChange: (Boolean) -> Unit = {},
 ) {
     if (isDsuInstalled) {
         return

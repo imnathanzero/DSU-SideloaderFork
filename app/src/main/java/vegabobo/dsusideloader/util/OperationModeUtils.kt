@@ -54,14 +54,17 @@ class OperationModeUtils {
     companion object {
 
         fun getOperationMode(context: Context, checkShizuku: Boolean): OperationMode {
+            // Shell.getShell() blocks while su is negotiated; ask once and reuse.
+            val isRoot = Shell.getShell().isRoot
+
             if (isDsuPermissionGranted(context)) {
-                if (Shell.getShell().isRoot) {
+                if (isRoot) {
                     return OperationMode.SYSTEM_AND_ROOT
                 }
                 return OperationMode.SYSTEM
             }
 
-            if (Shell.getShell().isRoot) {
+            if (isRoot) {
                 return OperationMode.ROOT
             }
 

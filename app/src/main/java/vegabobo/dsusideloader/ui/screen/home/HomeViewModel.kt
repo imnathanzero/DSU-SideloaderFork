@@ -75,9 +75,6 @@ class HomeViewModel @Inject constructor(
     private fun updateInstallationCard(update: (InstallationCardState) -> InstallationCardState) =
         _uiState.update { it.copy(installationCard = update(it.installationCard.copy())) }
 
-    private fun updateImageSizeCard(update: (ImageSizeCardState) -> ImageSizeCardState) =
-        _uiState.update { it.copy(imageSizeCard = update(it.imageSizeCard.copy())) }
-
     private fun updateSheetState(sheetDisplay: SheetDisplayState) =
         _uiState.update { it.copy(sheetDisplay = sheetDisplay) }
 
@@ -185,7 +182,6 @@ class HomeViewModel @Inject constructor(
 
     fun onClickInstall() {
         session.userSelection.setUserDataSize(uiState.value.userDataCard.text)
-        session.userSelection.setImageSize(uiState.value.imageSizeCard.text)
         updateSheetState(SheetDisplayState.CONFIRM_INSTALLATION)
     }
 
@@ -345,20 +341,37 @@ class HomeViewModel @Inject constructor(
 
     fun onClickRetryInstallation() {
         updateInstallationCard { it.copy(installationStep = InstallationStep.PROCESSING) }
-        startInstallation()
+        retryInstallation()
     }
 
     fun onClickUnmountSdCardAndRetry() {
         updateInstallationCard { it.copy(installationStep = InstallationStep.PROCESSING) }
         session.preferences.isUnmountSdCard = true
-        startInstallation()
+        retryInstallation()
     }
 
     fun onClickSetSeLinuxPermissive() {
         updateInstallationCard { it.copy(installationStep = InstallationStep.PROCESSING) }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             Shell.cmd("setenforce 0").exec()
-            delay(5000)
+            delay(SELINUX_SETTLE_DELAY_MS)
+            retryInstallation()
+        }
+    }
+
+    /**
+     * Restarts a failed installation.
+     *
+     * Every error path cancels [installationJob], and a cancelled job can never run
+     * another coroutine — reusing it made the installer and the logcat reader start
+     * and immediately return, so retrying appeared to do nothing. [startInstallation]
+     * also talks to the privileged service, which must not happen on the main thread.
+     */
+    private fun retryInstallation() {
+        if (!installationJob.isActive) {
+            installationJob = Job()
+        }
+        viewModelScope.launch(Dispatchers.IO + installationJob) {
             startInstallation()
         }
     }
@@ -394,20 +407,6 @@ class HomeViewModel @Inject constructor(
         }
 
         updateUserdataCard { it.copy(text = sizeWithSuffix) }
-    }
-
-    fun onCheckImageSizeCard() {
-        if (!uiState.value.imageSizeCard.isSelected) {
-            updateSheetState(SheetDisplayState.IMAGESIZE_WARNING)
-        } else {
-            dismissSheet()
-        }
-        updateImageSizeCard { it.copy(isSelected = !it.isSelected, text = "") }
-    }
-
-    fun updateImageSize(input: String) {
-        val inputWithSuffix = FilenameUtils.appendToDigitsToString(input, "b")
-        updateImageSizeCard { it.copy(text = inputWithSuffix) }
     }
 
     fun takeUriPermission(uri: Uri) {
@@ -522,4 +521,9 @@ class HomeViewModel @Inject constructor(
                 currentPartitionText = partition,
             )
         }
+
+    private companion object {
+        /** Time for the kernel to settle after `setenforce 0` before retrying. */
+        const val SELINUX_SETTLE_DELAY_MS = 5000L
+    }
 }

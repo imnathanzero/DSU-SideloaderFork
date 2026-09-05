@@ -1,6 +1,7 @@
 package vegabobo.dsusideloader.service
 
 import android.app.IActivityManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.IPackageManager
 import android.gsi.GsiProgress
@@ -20,7 +21,17 @@ import org.lsposed.hiddenapibypass.HiddenApiBypass
 import vegabobo.dsusideloader.BuildConfig
 import vegabobo.dsusideloader.IPrivilegedService
 
-class PrivilegedService(private val allowedCallerUid: Int) : IPrivilegedService.Stub() {
+class PrivilegedService(
+    private val allowedCallerUid: Int = UID_TRUSTED_TRANSPORT,
+) : IPrivilegedService.Stub() {
+
+    /**
+     * Shizuku creates the user service reflectively, preferring a single-[Context]
+     * constructor and falling back to a parameterless one. Both must exist for
+     * Shizuku mode to bind at all — a constructor taking only the caller uid is
+     * invisible to that reflection.
+     */
+    constructor(context: Context) : this(context.applicationInfo.uid)
 
     override fun onTransact(code: Int, data: android.os.Parcel, reply: android.os.Parcel?, flags: Int): Boolean {
         enforceCaller()
@@ -28,6 +39,14 @@ class PrivilegedService(private val allowedCallerUid: Int) : IPrivilegedService.
     }
 
     private fun enforceCaller() {
+        // UID_TRUSTED_TRANSPORT means the binder was created without the app uid being
+        // known (the parameterless reflective path). In every bind mode the binder is
+        // handed straight back to this app and never published — libsu's private root
+        // channel, a non-exported Service, or Shizuku returning it to the requesting
+        // app — so the transport itself is the boundary there.
+        if (allowedCallerUid == UID_TRUSTED_TRANSPORT) {
+            return
+        }
         val callingUid = Binder.getCallingUid()
         if (callingUid != allowedCallerUid) {
             Log.w(BuildConfig.APPLICATION_ID, "Rejected privileged Binder caller uid=$callingUid")
@@ -49,7 +68,7 @@ class PrivilegedService(private val allowedCallerUid: Int) : IPrivilegedService.
         return binder as IBinder
     }
 
-    fun setProp(key: String, value: String) {
+    private fun setProp(key: String, value: String) {
         try {
             SystemProperties.set(key, value)
         } catch (e: Exception) {
@@ -143,14 +162,29 @@ class PrivilegedService(private val allowedCallerUid: Int) : IPrivilegedService.
         return vols
     }
 
-    override fun unmount(volId: String?) {
+    /**
+     * Only removable public volumes may be (un)mounted through this service. The app
+     * unmounts an SD card so gsid does not try to allocate the DSU on it; nothing here
+     * has a reason to touch emulated, private or system volumes.
+     */
+    private fun requireMountableVolume(volId: String?): String {
+        if (volId == null || !volId.contains("public")) {
+            throw SecurityException("Volume is not allowed")
+        }
         requiresStorageManager()
-        STORAGE_MANAGER!!.unmount(volId)
+        val known = STORAGE_MANAGER!!.getVolumes(0).any { it.id == volId }
+        if (!known) {
+            throw SecurityException("Unknown volume")
+        }
+        return volId
+    }
+
+    override fun unmount(volId: String?) {
+        STORAGE_MANAGER!!.unmount(requireMountableVolume(volId))
     }
 
     override fun mount(volId: String?) {
-        requiresStorageManager()
-        STORAGE_MANAGER!!.mount(volId)
+        STORAGE_MANAGER!!.mount(requireMountableVolume(volId))
     }
 
     private var DYNAMIC_SYSTEM: IDynamicSystemService? = null
@@ -241,5 +275,13 @@ class PrivilegedService(private val allowedCallerUid: Int) : IPrivilegedService.
     override fun isInstalled(): Boolean {
         requiresDynamicSystem()
         return DYNAMIC_SYSTEM!!.isInstalled
+    }
+
+    companion object {
+        /**
+         * Sentinel for "the app uid was not supplied at construction time" — see
+         * [PrivilegedService.enforceCaller]. Never a real uid.
+         */
+        const val UID_TRUSTED_TRANSPORT = -1
     }
 }

@@ -36,6 +36,10 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
 
     private var shouldCheckShizuku = false
 
+    /** Tracks what was actually bound, so onDestroy never unbinds something that was not. */
+    private var boundMode: OperationMode? = null
+    private var shizukuListenersRegistered = false
+
     private fun setupSessionOperationMode() {
         val operationMode = OperationModeUtils.getOperationMode(application, shouldCheckShizuku)
         session.setOperationMode(operationMode)
@@ -59,11 +63,19 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
     private val REQUEST_PERMISSION_RESULT_LISTENER = this::onRequestPermissionResult
 
     private fun addShizukuListeners() {
+        if (shizukuListenersRegistered) {
+            return
+        }
+        shizukuListenersRegistered = true
         Shizuku.addBinderReceivedListenerSticky(BINDER_RECEIVED_LISTENER)
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
     }
 
     private fun removeShizukuListeners() {
+        if (!shizukuListenersRegistered) {
+            return
+        }
+        shizukuListenersRegistered = false
         Shizuku.removeRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
         Shizuku.removeBinderReceivedListener(BINDER_RECEIVED_LISTENER)
     }
@@ -93,6 +105,7 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
 
     fun bindShizuku() {
         Shizuku.bindUserService(userServiceArgs, PrivilegedProvider.connection)
+        boundMode = OperationMode.SHIZUKU
         shouldCheckShizuku = true
         setupSessionOperationMode()
     }
@@ -116,12 +129,15 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
         if (session.isRoot()) {
             val privRootService = Intent(this, PrivilegedRootService::class.java)
             RootService.bind(privRootService, PrivilegedProvider.connection)
+            boundMode = OperationMode.ROOT
             return
         }
 
         if (session.getOperationMode() == OperationMode.SYSTEM) {
             val service = Intent(this, PrivilegedSystemService::class.java)
-            bindService(service, PrivilegedProvider.connection, Context.BIND_AUTO_CREATE)
+            if (bindService(service, PrivilegedProvider.connection, Context.BIND_AUTO_CREATE)) {
+                boundMode = OperationMode.SYSTEM
+            }
             return
         }
 
@@ -130,6 +146,7 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Kick off su negotiation early; the operation-mode check below needs its result.
         Shell.getShell {}
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -146,7 +163,19 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
     }
 
     override fun attachBaseContext(newBase: Context?) {
-        HiddenApiBypass.addHiddenApiExemptions("")
+        // Scoped to what the privileged service actually reflects into, instead of
+        // lifting the hidden-API restriction for the whole process.
+        HiddenApiBypass.addHiddenApiExemptions(
+            "Landroid/os/ServiceManager;",
+            "Landroid/os/SystemProperties;",
+            "Landroid/os/image/IDynamicSystemService;",
+            "Landroid/os/storage/IStorageManager;",
+            "Landroid/os/storage/VolumeInfo;",
+            "Landroid/app/IActivityManager;",
+            "Landroid/content/pm/IPackageManager;",
+            "Landroid/gsi/IGsiService;",
+            "Landroid/gsi/GsiProgress;",
+        )
         super.attachBaseContext(newBase)
     }
 
@@ -155,19 +184,26 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
         if (isChangingConfigurations) {
             return
         }
-        when (session.getOperationMode()) {
+        // Unbinding something that was never bound (or whose process already died)
+        // throws IllegalArgumentException, so key off what was actually bound and
+        // tolerate a service that has gone away underneath us.
+        when (boundMode) {
             OperationMode.ROOT, OperationMode.SYSTEM_AND_ROOT ->
-                RootService.unbind(PrivilegedProvider.connection)
+                runCatching { RootService.unbind(PrivilegedProvider.connection) }
+                    .onFailure { Log.w(tag, "RootService already unbound", it) }
 
             OperationMode.SYSTEM ->
-                applicationContext.unbindService(PrivilegedProvider.connection)
+                runCatching { applicationContext.unbindService(PrivilegedProvider.connection) }
+                    .onFailure { Log.w(tag, "System service already unbound", it) }
 
-            OperationMode.SHIZUKU -> {
-                removeShizukuListeners()
-                Shizuku.unbindUserService(userServiceArgs, PrivilegedProvider.connection, true)
-            }
+            OperationMode.SHIZUKU ->
+                runCatching {
+                    Shizuku.unbindUserService(userServiceArgs, PrivilegedProvider.connection, true)
+                }.onFailure { Log.w(tag, "Shizuku service already unbound", it) }
 
             else -> {}
         }
+        removeShizukuListeners()
+        boundMode = null
     }
 }

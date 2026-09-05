@@ -73,12 +73,12 @@ fun Settings(
                 icon = Icons.Outlined.Bolt,
                 showToggle = true,
                 isEnabled = uiState.isRoot && !settingsViewModel.isAndroidQ(),
-                isChecked = uiState.preferences[AppPrefs.USE_BUILTIN_INSTALLER]!!,
+                isChecked = uiState.preferences[AppPrefs.USE_BUILTIN_INSTALLER] ?: false,
                 onClick = {
-                    if (!it) {
+                    if (it) {
                         settingsViewModel.updateSheetDisplay(DialogSheetState.BUILT_IN_INSTALLER)
                     }
-                    settingsViewModel.togglePreference(AppPrefs.USE_BUILTIN_INSTALLER, !it)
+                    settingsViewModel.togglePreference(AppPrefs.USE_BUILTIN_INSTALLER, it)
                 },
             )
             PreferenceItem(
@@ -86,23 +86,23 @@ fun Settings(
                 description = stringResource(id = R.string.preserve_userdata_desc),
                 icon = Icons.Outlined.Save,
                 showToggle = true,
-                isChecked = uiState.preferences[AppPrefs.KEEP_USERDATA]!!,
-                onClick = { settingsViewModel.togglePreference(AppPrefs.KEEP_USERDATA, !it) },
+                isChecked = uiState.preferences[AppPrefs.KEEP_USERDATA] ?: true,
+                onClick = { settingsViewModel.togglePreference(AppPrefs.KEEP_USERDATA, it) },
             )
             PreferenceItem(
                 title = stringResource(id = R.string.unmount_sd_title),
                 description = stringResource(id = R.string.unmount_sd_description),
                 icon = Icons.Outlined.SdCard,
                 showToggle = true,
-                isChecked = uiState.preferences[AppPrefs.UMOUNT_SD]!!,
-                onClick = { settingsViewModel.togglePreference(AppPrefs.UMOUNT_SD, !it) },
+                isChecked = uiState.preferences[AppPrefs.UMOUNT_SD] ?: false,
+                onClick = { settingsViewModel.togglePreference(AppPrefs.UMOUNT_SD, it) },
             )
             PreferenceItem(
                 title = stringResource(id = R.string.keep_screen_on),
                 icon = Icons.Outlined.ScreenLockPortrait,
                 showToggle = true,
-                isChecked = uiState.preferences[AppPrefs.KEEP_SCREEN_ON]!!,
-                onClick = { settingsViewModel.togglePreference(AppPrefs.KEEP_SCREEN_ON, !it) },
+                isChecked = uiState.preferences[AppPrefs.KEEP_SCREEN_ON] ?: false,
+                onClick = { settingsViewModel.togglePreference(AppPrefs.KEEP_SCREEN_ON, it) },
             )
         }
 
@@ -117,12 +117,12 @@ fun Settings(
                     description = stringResource(id = R.string.storage_check_description),
                     icon = Icons.Outlined.Storage,
                     showToggle = true,
-                    isChecked = uiState.preferences[AppPrefs.DISABLE_STORAGE_CHECK]!!,
+                    isChecked = uiState.preferences[AppPrefs.DISABLE_STORAGE_CHECK] ?: false,
                     onClick = {
-                        if (!it) {
+                        if (it) {
                             settingsViewModel.updateSheetDisplay(DialogSheetState.DISABLE_STORAGE_CHECK)
                         }
-                        settingsViewModel.togglePreference(AppPrefs.DISABLE_STORAGE_CHECK, !it)
+                        settingsViewModel.togglePreference(AppPrefs.DISABLE_STORAGE_CHECK, it)
                     },
                 )
                 if (settingsViewModel.getOperationMode() != OperationMode.ADB) {
@@ -131,8 +131,8 @@ fun Settings(
                         description = stringResource(id = R.string.full_logcat_logging_description),
                         icon = Icons.Outlined.BugReport,
                         showToggle = true,
-                        isChecked = uiState.preferences[AppPrefs.FULL_LOGCAT_LOGGING]!!,
-                        onClick = { settingsViewModel.togglePreference(AppPrefs.FULL_LOGCAT_LOGGING, !it) },
+                        isChecked = uiState.preferences[AppPrefs.FULL_LOGCAT_LOGGING] ?: false,
+                        onClick = { settingsViewModel.togglePreference(AppPrefs.FULL_LOGCAT_LOGGING, it) },
                     )
                 }
             }

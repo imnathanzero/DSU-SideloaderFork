@@ -13,7 +13,6 @@ data class InstallationPreferences(
 
 class UserSelection(
     var userSelectedUserdata: Long = DSUConstants.DEFAULT_USERDATA,
-    var userSelectedImageSize: Long = DSUConstants.DEFAULT_IMAGE_SIZE,
     var selectedFileUri: Uri = Uri.EMPTY,
     var selectedFileName: String = "",
 ) {
@@ -29,24 +28,11 @@ class UserSelection(
             }
     }
 
-    fun setImageSize(size: String) {
-        userSelectedImageSize =
-            if (size.isNotEmpty()) {
-                FilenameUtils.getDigits(size).toLong()
-            } else {
-                DSUConstants.DEFAULT_IMAGE_SIZE
-            }
-    }
-
-    fun isCustomImageSize(): Boolean {
-        return userSelectedImageSize != DSUConstants.DEFAULT_IMAGE_SIZE
-    }
-
+    // The uri and the name identify a file the user picked; they are kept out of
+    // toString() so they do not end up in logs or a saved diagnostic report.
     override fun toString(): String {
         return "UserSelection(userSelectedUserdata=$userSelectedUserdata, " +
-            "userSelectedImageSize=$userSelectedImageSize, " +
-            "selectedFileUri=$selectedFileUri, " +
-            "selectedFileName=$selectedFileName)"
+            "hasSelectedFile=${selectedFileUri != Uri.EMPTY})"
     }
 }
 
@@ -75,12 +61,7 @@ class Session(
     fun getInstallationParameters(): Triple<Long, String, Long> {
         val userdataSize = userSelection.userSelectedUserdata
         val absoluteFilePath = FilenameUtils.getFilePath(dsuInstallation.uri, true)
-
-        var imageSize = dsuInstallation.fileSize
-        if (userSelection.isCustomImageSize()) {
-            imageSize = userSelection.userSelectedImageSize
-        }
-        return Triple(userdataSize, absoluteFilePath, imageSize)
+        return Triple(userdataSize, absoluteFilePath, dsuInstallation.fileSize)
     }
 
     override fun toString(): String {

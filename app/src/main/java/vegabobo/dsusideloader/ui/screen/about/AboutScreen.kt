@@ -51,23 +51,14 @@ fun AboutScreen(
     LaunchedEffect(Unit) {
         aboutViewModel.resetDeveloperOptionsCounter()
         uiState.toastDisplay.collectLatest {
-            when (it) {
-                DevOptToastDisplay.ENABLED_DEV_OPT ->
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.developer_options_enabled),
-                        Toast.LENGTH_LONG,
-                    ).show()
-
-                DevOptToastDisplay.DISABLED_DEV_OPT ->
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.developer_options_disabled),
-                        Toast.LENGTH_LONG,
-                    ).show()
-
-                else -> {}
+            val message = when (it) {
+                DevOptToastDisplay.ENABLED_DEV_OPT -> R.string.developer_options_enabled
+                DevOptToastDisplay.DISABLED_DEV_OPT -> R.string.developer_options_disabled
+                DevOptToastDisplay.NONE -> return@collectLatest
             }
+            Toast.makeText(context, context.getString(message), Toast.LENGTH_LONG).show()
+            // Consume it, otherwise returning to this screen replays the last toast.
+            aboutViewModel.onToastDisplayed()
         }
     }
 
@@ -87,7 +78,9 @@ fun AboutScreen(
             onClickImage = { aboutViewModel.onClickImage() },
             onClickCheckUpdates = { aboutViewModel.onClickCheckUpdates() },
             onClickDownloadUpdate = { aboutViewModel.onClickDownloadUpdate() },
-            onClickViewChangelog = { uriHandler.openUri(aboutViewModel.response.changelogUrl) },
+            onClickViewChangelog = {
+                aboutViewModel.changelogUrl?.let { url -> uriHandler.openUri(url) }
+            },
         )
         Title(
             stringResource(id = R.string.application),

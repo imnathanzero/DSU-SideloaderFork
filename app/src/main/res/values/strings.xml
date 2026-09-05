@@ -117,6 +117,7 @@
     <string name="userdata_size">Userdata size</string>
     <string name="userdata_size_info">Size in gigabytes</string>
     <string name="allowed_userdata_allocation">Maximum available for allocation: %1$sGB</string>
+    <string name="userdata_size_gb">%1$sGB</string>
     <string name="preserve_userdata">Keep Userdata</string>
     <string name="preserve_userdata_desc">Keep the existing DSU userdata partition when updating.</string>
 
@@ -171,6 +172,7 @@
     <string name="check_updates_text_idle">Tap to check</string>
     <string name="check_updates_text_found">New %1$s version found</string>
     <string name="check_updates_text_updated">Running latest version</string>
+    <string name="check_updates_text_failed">Could not check for updates, tap to retry</string>
     <string name="changelog">Changelog</string>
     <string name="download">Download</string>
 

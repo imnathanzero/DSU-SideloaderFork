@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <files-path name="files_path" path="." />
+    <!--
+        Scoped to the single directory the updater writes into. A "." path would
+        share the whole filesDir, including the prepared DSU metadata, with any
+        app that receives a grant.
+    -->
+    <files-path
+        name="updates"
+        path="updates/" />
 </paths>

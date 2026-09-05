@@ -14,15 +14,29 @@ class LogcatDiagnostic(
 ) {
 
     private val tag = this.javaClass.simpleName
-    var logs = ""
+
+    // Appending to an immutable String per log line is quadratic, and a full logcat run
+    // produces tens of thousands of lines. Buffer instead, and materialise on demand.
+    private val logBuffer = StringBuilder()
+
+    val logs: String
+        get() = synchronized(logBuffer) { logBuffer.toString() }
+
     val isLogging = AtomicBoolean(false)
     var shouldLogEverything = false
+
+    private fun appendLog(line: String) {
+        synchronized(logBuffer) { logBuffer.append(line).append('\n') }
+    }
 
     fun startLogging(prependString: String) {
         if (isLogging.get()) {
             destroy()
         }
-        logs = ""
+        synchronized(logBuffer) {
+            logBuffer.setLength(0)
+            logBuffer.append(prependString).append('\n')
+        }
         isLogging.set(true)
         Log.d(tag, "startLogging(), logEveryting: $shouldLogEverything, isLogging: ${isLogging.get()}")
         CmdRunner.run("logcat -c")
@@ -33,10 +47,6 @@ class LogcatDiagnostic(
                 "logcat -v tag gsid:* *:S DynamicSystemService:* *:S DynamicSystemInstallationService:* *:S DynSystemInstallationService:* *:S"
             }
         CmdRunner.runReadEachLine(logCmd) {
-            if (logs.isEmpty()) {
-                logs = "$prependString\n"
-            }
-
             if (it.contains("DynamicSystemService") && it.contains("startInstallation")) {
                 onStepUpdate(InstallationStep.INSTALLING)
                 onInstallationProgressUpdate(0F, "userdata")
@@ -46,7 +56,7 @@ class LogcatDiagnostic(
                 return@runReadEachLine
             }
 
-            logs += "$it\n"
+            appendLog(it)
             onLogLineReceived()
 
             /**

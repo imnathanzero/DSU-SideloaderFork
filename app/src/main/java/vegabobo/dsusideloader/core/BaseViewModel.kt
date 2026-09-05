@@ -3,6 +3,7 @@ package vegabobo.dsusideloader.core
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
+import vegabobo.dsusideloader.preferences.AppPrefs
 import vegabobo.dsusideloader.util.DataStoreUtils
 
 open class BaseViewModel(
@@ -15,10 +16,14 @@ open class BaseViewModel(
         return DataStoreUtils.readStringPref(dataStore, key, "")
     }
 
+    /**
+     * Reads a boolean preference, falling back to the preference's declared
+     * default (see [AppPrefs.boolDefault]) when it has never been written.
+     */
     suspend fun readBoolPref(
         key: String,
     ): Boolean {
-        return DataStoreUtils.readBoolPref(dataStore, key, false)
+        return DataStoreUtils.readBoolPref(dataStore, key, AppPrefs.boolDefault(key))
     }
 
     suspend fun updateBoolPref(

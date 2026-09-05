@@ -6,4 +6,6 @@
     <color name="system_accent_soft">@android:color/system_accent1_600</color>
     <color name="system_accent_2">@android:color/system_accent2_500</color>
     <color name="netrual_color">@android:color/system_neutral2_900</color>
+    <!-- The platform exposes no dynamic error palette, so this matches the other configurations. -->
+    <color name="error">#FFC1666B</color>
 </resources>

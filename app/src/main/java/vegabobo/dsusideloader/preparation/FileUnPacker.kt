@@ -29,19 +29,23 @@ class FileUnPacker(
         outputStr: OutputStream,
         onReadedBuffer: (Long) -> Unit,
     ) {
-        val buffer = ByteArray(8 * 1024)
-        var n: Int
-        var readed: Long = 0
-        while (-1 != inputStr.read(buffer)
-                .also { n = it } && !installationJob.isCancelled
-        ) {
-            readed += n
-            onReadedBuffer(readed)
-            outputStr.write(buffer, 0, n)
+        // use() on both sides: a cancelled or failing installation used to leave the
+        // SAF descriptors open, which keeps the picked file and the output locked.
+        inputStr.use { input ->
+            outputStr.use { output ->
+                val buffer = ByteArray(8 * 1024)
+                var n: Int
+                var readed: Long = 0
+                while (-1 != input.read(buffer)
+                        .also { n = it } && !installationJob.isCancelled
+                ) {
+                    readed += n
+                    onReadedBuffer(readed)
+                    output.write(buffer, 0, n)
+                }
+                output.flush()
+            }
         }
-        inputStr.close()
-        outputStr.flush()
-        outputStr.close()
     }
 
     fun pack(): Pair<Uri, Long> {

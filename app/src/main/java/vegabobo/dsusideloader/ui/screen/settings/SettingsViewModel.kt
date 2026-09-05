@@ -32,15 +32,20 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     fun reloadPreferences() {
-        uiState.value.preferences.forEach { entry ->
-            viewModelScope.launch {
-                val isEnabled = readBoolPref(entry.key)
-                togglePreference(entry.key, isEnabled)
+        viewModelScope.launch {
+            // Read every known preference, then publish them in a single update so the
+            // switches never flicker through a half-loaded state.
+            val loaded = hashMapOf<String, Boolean>()
+            uiState.value.preferences.keys.forEach { key ->
+                loaded[key] = readBoolPref(key)
             }
-        }
-
-        if (session.isRoot()) {
-            _uiState.update { it.copy(isRoot = true) }
+            session.preferences.preserveUserdata =
+                loaded[AppPrefs.KEEP_USERDATA] ?: AppPrefs.boolDefault(AppPrefs.KEEP_USERDATA)
+            _uiState.update { state ->
+                val merged = HashMap(state.preferences)
+                merged.putAll(loaded)
+                state.copy(preferences = merged, isRoot = session.isRoot())
+            }
         }
     }
 
@@ -54,12 +59,11 @@ class SettingsViewModel @Inject constructor(
                 if (preference == AppPrefs.KEEP_USERDATA) {
                     session.preferences.preserveUserdata = value
                 }
-                _uiState.update {
-                    val cloneMap = hashMapOf<String, Boolean>()
-                    cloneMap.putAll(uiState.value.preferences)
-                    cloneMap[preference] = value
-                    Log.d(tag, "preference: $preference, isEnabled: $value")
-                    it.copy(preferences = cloneMap)
+                Log.d(tag, "preference: $preference, isEnabled: $value")
+                _uiState.update { state ->
+                    val updated = HashMap(state.preferences)
+                    updated[preference] = value
+                    state.copy(preferences = updated)
                 }
             }
         }

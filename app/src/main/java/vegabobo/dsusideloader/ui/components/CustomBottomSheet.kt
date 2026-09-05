@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import vegabobo.dsusideloader.ui.theme.cardContainerLow
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -102,7 +103,10 @@ fun CustomBottomSheet(
         },
         modifier = modifier.fillMaxSize(),
         sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        // A sheet painted in `surface` is the same color as the screen it covers, so
+        // above the scrim its only edge was the corner radius. One tonal step up
+        // separates it from the content behind without adding a border.
+        sheetBackgroundColor = MaterialTheme.colorScheme.cardContainerLow,
         sheetContentColor = MaterialTheme.colorScheme.onSurface,
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32F),
     ) {}

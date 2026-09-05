@@ -10,6 +10,9 @@ enum class UpdateStatus {
     CHECKING_FOR_UPDATES,
     NO_UPDATE_FOUND,
     UPDATE_FOUND,
+
+    /** The check or the download did not complete; the card offers a retry. */
+    FAILED,
 }
 
 data class UpdaterCardState(

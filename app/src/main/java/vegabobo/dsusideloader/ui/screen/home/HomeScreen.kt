@@ -6,7 +6,11 @@ import android.content.Context
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Settings
@@ -25,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collectLatest
@@ -198,7 +203,6 @@ fun Home(
                     isDsuInstalled = isDsuInstalled,
                     onCheckedChange = { homeViewModel.onCheckUserdataCard() },
                     onValueChange = { homeViewModel.updateUserdataSize(it) },
-                    onPreserveCheckedChange = { homeViewModel.session.preferences.preserveUserdata = it },
                 )
                 DsuInfoCard(
                     onClickViewDocs = { uriHandler.openUri(HomeLinks.DSU_DOCS) },
@@ -213,7 +217,18 @@ fun Home(
             onDismissRequest = { showErrorDialog = false },
             icon = { Icon(Icons.Outlined.ErrorOutline, contentDescription = null) },
             title = { Text(stringResource(id = R.string.installation_error_details)) },
-            text = { Text(errorDetails) },
+            text = {
+                // errorDetails carries the whole installation log, and the text slot of a
+                // dialog neither scrolls nor bounds its height: a long log used to push the
+                // buttons off the bottom of the screen, leaving no way to dismiss it.
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Text(text = errorDetails)
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -262,6 +277,5 @@ fun Home(
             )
 
         SheetDisplayState.NONE -> {}
-        SheetDisplayState.IMAGESIZE_WARNING -> {}
     }
 }

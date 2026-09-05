@@ -1,6 +1,7 @@
 package vegabobo.dsusideloader.ui.cards.installation.content
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,8 +11,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -42,9 +45,17 @@ fun ProgressableCardContent(
         if (isIndeterminate) {
             LinearProgressIndicator(modifier = progressBarModifier)
         } else {
+            // The installer only publishes progress every 128 MiB, so the raw value
+            // arrives in large jumps; animating between them reads as a partition
+            // being written rather than as a bar teleporting. ProgressAnimationSpec is
+            // the spring Material uses for exactly this.
+            val animatedProgress by animateFloatAsState(
+                targetValue = progress.coerceIn(0F, 1F),
+                animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+            )
             LinearProgressIndicator(
                 modifier = progressBarModifier,
-                progress = progress,
+                progress = animatedProgress,
             )
         }
     }

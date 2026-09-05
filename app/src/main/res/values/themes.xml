@@ -18,7 +18,15 @@
         <item name="android:colorBackground">@color/background</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- Both bars are transparent, so their icons have to be dark on a light
+             background. The theme covers the launch window, before the first
+             composition applies the same polarity from the resolved color scheme;
+             without windowLightNavigationBar the gesture pill started off white on
+             white. enforceNavigationBarContrast matches Theme.kt, otherwise the
+             platform paints a grey band behind the transparent bar until then. -->
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
 
     </style>
 </resources>

@@ -26,9 +26,11 @@ fun Navigation() {
         fun navigate(destination: String) {
             if (destination == Destinations.Up) {
                 navController.navigateUp()
-            } else {
-                navController.navigate(destination)
+                return
             }
+            // Double taps on a row fire the callback twice before the transition ends,
+            // which otherwise stacks the same screen and needs two back presses.
+            navController.navigate(destination) { launchSingleTop = true }
         }
 
         composable(Destinations.Homepage) { Home(navigate = { navigate(it) }) }

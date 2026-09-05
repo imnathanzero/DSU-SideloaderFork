@@ -55,8 +55,5 @@ object PrivilegedProvider {
         return connection.SERVICE ?: throw Exception("Service disconnected.")
     }
 
-    // Blocking for legacy callers.
-    fun isRoot(): Boolean = getService().uid == 0
-
     fun isConnected(): Boolean = connection.SERVICE != null
 }

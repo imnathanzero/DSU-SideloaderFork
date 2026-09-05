@@ -30,15 +30,18 @@ fun ConfirmInstallationSheet(
         content = {
             Spacer(modifier = Modifier.height(16.dp))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                // No trailing colon: DialogItem already renders the label above its
+                // value, and a colon appended in code cannot be translated away for
+                // locales that punctuate labels differently.
                 DialogItem(
                     icon = Icons.Outlined.InsertDriveFile,
-                    title = "${stringResource(id = R.string.selected_file)}:",
+                    title = stringResource(id = R.string.selected_file),
                     text = filename,
                 )
                 DialogItem(
                     icon = Icons.Outlined.Storage,
-                    title = "${stringResource(id = R.string.userdata_size)}:",
-                    text = "${userdata}GB",
+                    title = stringResource(id = R.string.userdata_size),
+                    text = stringResource(id = R.string.userdata_size_gb, userdata),
                 )
             }
         },

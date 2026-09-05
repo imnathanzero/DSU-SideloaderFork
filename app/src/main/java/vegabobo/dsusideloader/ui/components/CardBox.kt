@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import vegabobo.dsusideloader.ui.theme.CardCornerRadius
+import vegabobo.dsusideloader.ui.theme.cardContainer
 
 @Composable
 fun CardBox(
@@ -30,7 +31,7 @@ fun CardBox(
     isToggleChecked: Boolean = false,
     isToggleEnabled: Boolean = true,
     addPadding: Boolean = true,
-    cardColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
+    cardColor: Color = MaterialTheme.colorScheme.cardContainer,
     onCheckedChange: ((Boolean) -> Unit) = {},
     roundedCornerShape: RoundedCornerShape = RoundedCornerShape(CardCornerRadius),
     content: @Composable (ColumnScope) -> Unit,
@@ -38,15 +39,15 @@ fun CardBox(
     // Surface resolves the matching "on" color for cardColor, so text and icons stay
     // readable even on tinted cards such as errorContainer.
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = roundedCornerShape,
         color = cardColor,
     ) {
         Column(
             modifier = if (addPadding) {
-                modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+                Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
             } else {
-                modifier
+                Modifier
             },
         ) {
             if (cardTitle.isNotEmpty()) {
