@@ -82,10 +82,7 @@ fun AboutScreen(
                 aboutViewModel.changelogUrl?.let { url -> uriHandler.openUri(url) }
             },
         )
-        Title(
-            stringResource(id = R.string.application),
-            modifier = Modifier.padding(start = 4.dp),
-        )
+        Title(stringResource(id = R.string.application))
         SimpleCard(
             addPadding = false,
         ) {
@@ -102,10 +99,7 @@ fun AboutScreen(
                 onClick = { navigate(Destinations.Libraries) },
             )
         }
-        Title(
-            stringResource(id = R.string.collaborators),
-            modifier = Modifier.padding(start = 4.dp),
-        )
+        Title(stringResource(id = R.string.collaborators))
         SimpleCard(
             addPadding = false,
         ) {
