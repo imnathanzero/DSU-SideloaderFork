@@ -6,9 +6,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,7 +25,12 @@ fun TopBar(
     onClickBackButton: (() -> Unit)? = null,
 ) {
     LargeTopAppBar(
-        title = { Text(text = barTitle) },
+        title = {
+            Text(
+                text = barTitle,
+                style = MaterialTheme.typography.headlineMedium,
+            )
+        },
         navigationIcon = {
             if (onClickBackButton != null) {
                 IconButton(onClickBackButton) {
@@ -43,6 +51,14 @@ fun TopBar(
                 }
             }
         },
+        // Keep the bar transparent over the app background; the collapsed state still
+        // gets its tonal elevation from scrolledContainerColor.
+        colors = TopAppBarDefaults.largeTopAppBarColors(
+            containerColor = Color.Transparent,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
         scrollBehavior = scrollBehavior,
     )
 }

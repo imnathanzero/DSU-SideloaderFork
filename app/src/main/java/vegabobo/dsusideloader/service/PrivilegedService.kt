@@ -5,8 +5,8 @@ import android.content.Intent
 import android.content.pm.IPackageManager
 import android.gsi.GsiProgress
 import android.gsi.IGsiService
-import android.os.Build
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.os.Process
@@ -77,10 +77,14 @@ class PrivilegedService(private val allowedCallerUid: Int) : IPrivilegedService.
         requiresActivityManager()
         val component = intent?.component
         val allowed =
-            (component?.packageName == "com.android.dynsystem" &&
-                component.className == "com.android.dynsystem.VerificationActivity") ||
-                (component?.packageName == BuildConfig.APPLICATION_ID &&
-                    component.className == "${BuildConfig.APPLICATION_ID}.MainActivity")
+            (
+                component?.packageName == "com.android.dynsystem" &&
+                    component.className == "com.android.dynsystem.VerificationActivity"
+                ) ||
+                (
+                    component?.packageName == BuildConfig.APPLICATION_ID &&
+                        component.className == "${BuildConfig.APPLICATION_ID}.MainActivity"
+                    )
         if (!allowed) {
             throw SecurityException("Activity is not allowed")
         }

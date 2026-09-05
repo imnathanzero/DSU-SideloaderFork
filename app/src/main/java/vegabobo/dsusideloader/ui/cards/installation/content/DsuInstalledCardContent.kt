@@ -4,8 +4,15 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +25,7 @@ import vegabobo.dsusideloader.ui.components.buttons.ErrorButton
 import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 import vegabobo.dsusideloader.ui.components.buttons.SecondaryButton
 import vegabobo.dsusideloader.ui.screen.home.InstallationCardState
+import vegabobo.dsusideloader.ui.theme.Shapes
 
 @Composable
 fun DsuInstalledCardContent(
@@ -28,12 +36,29 @@ fun DsuInstalledCardContent(
     onClickRebootToDynOS: () -> Unit,
     onClickDiscardDsu: () -> Unit,
 ) {
-    Text(
-        text = stringResource(R.string.dsu_already_installed),
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(bottom = 8.dp),
-    )
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp),
+        shape = Shapes.small,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                modifier = Modifier.size(18.dp),
+                imageVector = Icons.Outlined.CheckCircle,
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = stringResource(R.string.dsu_already_installed),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
 
     FileSelectionBox(
         textFieldInteraction = textFieldInteraction,
@@ -44,7 +69,7 @@ fun DsuInstalledCardContent(
         textFieldTitle = stringResource(id = R.string.select_gsi_info),
     )
 
-    Spacer(modifier = Modifier.padding(top = 10.dp))
+    Spacer(modifier = Modifier.height(12.dp))
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth(),
@@ -52,7 +77,7 @@ fun DsuInstalledCardContent(
         if (uiState.isError) {
             Text(
                 text = stringResource(id = R.string.file_unsupported),
-                modifier = Modifier.padding(start = 2.dp),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
             )
         }
@@ -62,7 +87,7 @@ fun DsuInstalledCardContent(
                 text = stringResource(R.string.clear),
                 onClick = onClickClear,
             )
-            Spacer(modifier = Modifier.padding(end = 6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
         }
         PrimaryButton(
             text = stringResource(R.string.update),
@@ -71,7 +96,7 @@ fun DsuInstalledCardContent(
         )
     }
 
-    Spacer(modifier = Modifier.padding(top = 8.dp))
+    Spacer(modifier = Modifier.height(8.dp))
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth(),
@@ -81,7 +106,7 @@ fun DsuInstalledCardContent(
             text = stringResource(id = R.string.reboot_into_dsu),
             onClick = onClickRebootToDynOS,
         )
-        Spacer(modifier = Modifier.padding(end = 6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         ErrorButton(
             text = stringResource(id = R.string.discard),
             onClick = onClickDiscardDsu,

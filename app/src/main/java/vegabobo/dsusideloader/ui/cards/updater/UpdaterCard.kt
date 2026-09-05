@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -22,14 +25,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import vegabobo.dsusideloader.BuildConfig
 import vegabobo.dsusideloader.R
 import vegabobo.dsusideloader.ui.components.PreferenceItem
@@ -68,13 +69,13 @@ fun UpdaterCard(
         ) {
             Surface(
                 modifier = Modifier
-                    .padding(10.dp)
-                    .padding(top = 16.dp),
+                    .padding(top = 24.dp, bottom = 8.dp),
+                shape = CircleShape,
                 color = MaterialTheme.colorScheme.inverseOnSurface,
             ) {
                 Box {
                     val progressBarModifier = Modifier
-                        .size(100.dp)
+                        .size(104.dp)
                         .align(Alignment.Center)
                     if (isCheckingForUpdates()) {
                         CircularProgressIndicator(modifier = progressBarModifier)
@@ -103,22 +104,22 @@ fun UpdaterCard(
             }
             Text(
                 text = stringResource(id = R.string.app_name),
-                fontSize = 22.sp,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = stringResource(
                     id = R.string.version_info,
                     BuildConfig.VERSION_NAME,
                     BuildConfig.VERSION_CODE,
                 ),
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.alpha(0.75f),
             )
+            Spacer(modifier = Modifier.height(18.dp))
         }
-        Spacer(modifier = Modifier.padding(4.dp))
         if (isUpdaterAvailable) {
             PreferenceItem(
                 title = stringResource(id = R.string.check_updates_title),
@@ -133,13 +134,14 @@ fun UpdaterCard(
                     else ->
                         stringResource(id = R.string.check_updates_text_idle)
                 },
+                icon = Icons.Outlined.Update,
                 onClick = { onClickCheckUpdates() },
             )
             AnimatedVisibility(visible = isUpdateFound()) {
                 Row(
                     modifier = Modifier
-                        .padding(all = 12.dp)
-                        .padding(end = 4.dp),
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
                 ) {
                     Spacer(modifier = Modifier.weight(1F))
                     SecondaryButton(
@@ -154,7 +156,7 @@ fun UpdaterCard(
                 }
             }
         } else {
-            Spacer(modifier = Modifier.padding(6.dp))
+            Spacer(modifier = Modifier.height(6.dp))
         }
     }
 }

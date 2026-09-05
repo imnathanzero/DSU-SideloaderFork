@@ -2,7 +2,8 @@ package vegabobo.dsusideloader.ui.components
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
+import vegabobo.dsusideloader.ui.theme.CardCornerRadius
+import vegabobo.dsusideloader.ui.theme.GroupedItemCornerRadius
 
 @Composable
 fun DynamicListItem(
@@ -10,10 +11,21 @@ fun DynamicListItem(
     currentValue: Int,
     content: @Composable () -> Unit,
 ) {
-    val shape = when (currentValue) {
-        0 -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
-        listLength -> RoundedCornerShape(bottomEnd = 10.dp, bottomStart = 10.dp)
-        else -> RoundedCornerShape(0.dp)
+    val shape = when {
+        listLength == 0 -> RoundedCornerShape(CardCornerRadius)
+        currentValue == 0 -> RoundedCornerShape(
+            topStart = CardCornerRadius,
+            topEnd = CardCornerRadius,
+            bottomStart = GroupedItemCornerRadius,
+            bottomEnd = GroupedItemCornerRadius,
+        )
+        currentValue == listLength -> RoundedCornerShape(
+            topStart = GroupedItemCornerRadius,
+            topEnd = GroupedItemCornerRadius,
+            bottomStart = CardCornerRadius,
+            bottomEnd = CardCornerRadius,
+        )
+        else -> RoundedCornerShape(GroupedItemCornerRadius)
     }
     CardBox(
         addPadding = false,

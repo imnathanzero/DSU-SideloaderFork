@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collectLatest
@@ -45,6 +46,8 @@ import vegabobo.dsusideloader.ui.sdialogs.CancelSheet
 import vegabobo.dsusideloader.ui.sdialogs.ConfirmInstallationSheet
 import vegabobo.dsusideloader.ui.sdialogs.DiscardDSUSheet
 import vegabobo.dsusideloader.ui.sdialogs.ViewLogsBottomSheet
+import vegabobo.dsusideloader.ui.theme.ScreenHorizontalPadding
+import vegabobo.dsusideloader.ui.theme.ScreenItemSpacing
 import vegabobo.dsusideloader.ui.util.KeepScreenOn
 import vegabobo.dsusideloader.util.collectAsStateWithLifecycle
 
@@ -129,8 +132,8 @@ fun Home(
     }
 
     ApplicationScreen(
-        modifier = Modifier.padding(start = 10.dp, end = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(horizontal = ScreenHorizontalPadding),
+        verticalArrangement = Arrangement.spacedBy(ScreenItemSpacing),
         topBar = {
             TopBar(
                 barTitle = stringResource(id = R.string.app_name),
@@ -208,6 +211,7 @@ fun Home(
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = { showErrorDialog = false },
+            icon = { Icon(Icons.Outlined.ErrorOutline, contentDescription = null) },
             title = { Text(stringResource(id = R.string.installation_error_details)) },
             text = { Text(errorDetails) },
             confirmButton = {

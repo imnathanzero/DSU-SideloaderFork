@@ -1,7 +1,9 @@
 package vegabobo.dsusideloader.ui.screen.libraries
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +26,8 @@ import vegabobo.dsusideloader.ui.components.DynamicListItem
 import vegabobo.dsusideloader.ui.components.PreferenceItem
 import vegabobo.dsusideloader.ui.components.TopBar
 import vegabobo.dsusideloader.ui.screen.Destinations
+import vegabobo.dsusideloader.ui.theme.GroupedItemSpacing
+import vegabobo.dsusideloader.ui.theme.ScreenHorizontalPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +48,7 @@ fun LibrariesScreen(
         columnContent = false,
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .padding(start = 10.dp, end = 10.dp),
+            .padding(horizontal = ScreenHorizontalPadding),
         topBar = {
             TopBar(
                 barTitle = stringResource(id = R.string.libraries_title),
@@ -53,7 +57,10 @@ fun LibrariesScreen(
             )
         },
     ) {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(GroupedItemSpacing),
+        ) {
             items(libraries.size) {
                 val thisLibrary = libraries[it]
                 val name = thisLibrary.name
@@ -74,7 +81,7 @@ fun LibrariesScreen(
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.padding(26.dp)) }
+            item { Spacer(modifier = Modifier.height(26.dp)) }
         }
     }
 }

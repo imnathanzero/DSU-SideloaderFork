@@ -8,6 +8,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import vegabobo.dsusideloader.ui.theme.Shapes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,12 +26,12 @@ fun FileSelectionBox(
     OutlinedTextField(
         modifier = modifier.fillMaxWidth(),
         value = textFieldValue,
-        placeholder = { Text(text = "") },
         onValueChange = onValueChange,
         enabled = isEnabled,
         isError = isError,
         singleLine = true,
         readOnly = isReadOnly,
+        shape = Shapes.small,
         keyboardOptions = keyboardOptions,
         interactionSource = textFieldInteraction,
         label = { Text(text = textFieldTitle) },

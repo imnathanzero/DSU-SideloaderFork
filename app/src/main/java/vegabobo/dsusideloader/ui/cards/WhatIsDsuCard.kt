@@ -3,6 +3,7 @@ package vegabobo.dsusideloader.ui.cards
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -21,15 +22,14 @@ fun DsuInfoCard(
         modifier = modifier,
         cardTitle = stringResource(id = R.string.what_is_dsu),
         text = stringResource(id = R.string.what_is_dsu_description),
-        justifyText = true,
     ) {
-        Row(modifier = Modifier.padding(top = 6.dp)) {
+        Row(modifier = Modifier.padding(top = 8.dp)) {
             Spacer(modifier = Modifier.weight(1F))
             SecondaryButton(
                 text = stringResource(id = R.string.view_docs),
                 onClick = onClickViewDocs,
             )
-            Spacer(modifier = Modifier.padding(start = 10.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             SecondaryButton(
                 text = stringResource(id = R.string.learn_more),
                 onClick = onClickLearnMore,

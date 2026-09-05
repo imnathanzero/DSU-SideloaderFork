@@ -1,68 +1,78 @@
 package vegabobo.dsusideloader.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import vegabobo.dsusideloader.ui.theme.CardCornerRadius
 
 @Composable
 fun CardBox(
     modifier: Modifier = Modifier,
     cardTitle: String = "",
+    cardIcon: ImageVector? = null,
     addToggle: Boolean = false,
     isToggleChecked: Boolean = false,
     isToggleEnabled: Boolean = true,
     addPadding: Boolean = true,
     cardColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
     onCheckedChange: ((Boolean) -> Unit) = {},
-    roundedCornerShape: RoundedCornerShape = RoundedCornerShape(10.dp),
+    roundedCornerShape: RoundedCornerShape = RoundedCornerShape(CardCornerRadius),
     content: @Composable (ColumnScope) -> Unit,
 ) {
-    Box(
-        modifier = if (addPadding) {
-            Modifier
-                .clip(roundedCornerShape)
-                .background(cardColor)
-                .padding(all = 10.dp)
-                .padding(end = 4.dp, start = 4.dp)
-                .fillMaxWidth()
-        } else {
-            Modifier
-                .clip(roundedCornerShape)
-                .background(cardColor)
-                .fillMaxWidth()
-        },
+    // Surface resolves the matching "on" color for cardColor, so text and icons stay
+    // readable even on tinted cards such as errorContainer.
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = roundedCornerShape,
+        color = cardColor,
     ) {
-        Column(modifier = modifier) {
+        Column(
+            modifier = if (addPadding) {
+                modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+            } else {
+                modifier
+            },
+        ) {
             if (cardTitle.isNotEmpty()) {
-                if (addToggle) {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        CardTitle(modifier.weight(1F), cardTitle = cardTitle)
-                        Spacer(modifier = Modifier.padding(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (cardIcon != null) {
+                        Icon(
+                            imageVector = cardIcon,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+                    CardTitle(Modifier.weight(1F), cardTitle = cardTitle)
+                    if (addToggle) {
+                        Spacer(modifier = Modifier.width(12.dp))
                         Switch(
                             checked = isToggleChecked,
                             onCheckedChange = onCheckedChange,
                             enabled = isToggleEnabled,
                         )
                     }
-                } else {
-                    CardTitle(
-                        cardTitle = cardTitle,
-                        modifier = Modifier.padding(top = 9.5.dp, bottom = 9.5.dp),
-                    )
                 }
             }
             content(this)

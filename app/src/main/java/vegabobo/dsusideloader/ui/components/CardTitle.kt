@@ -6,7 +6,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun CardTitle(modifier: Modifier = Modifier, cardTitle: String) {
@@ -14,8 +13,7 @@ fun CardTitle(modifier: Modifier = Modifier, cardTitle: String) {
     Text(
         modifier = modifier.horizontalScroll(scroll),
         text = cardTitle,
-        fontSize = 20.sp,
         maxLines = 1,
-        style = MaterialTheme.typography.headlineMedium,
+        style = MaterialTheme.typography.titleLarge,
     )
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,17 +52,18 @@ fun DialogLikeBottomSheet(
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = text,
-            textAlign = TextAlign.Justify,
-            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         content()
-        Row(modifier = Modifier.padding(top = 16.dp)) {
+        Row(modifier = Modifier.padding(top = 24.dp)) {
             Spacer(modifier = Modifier.weight(1F))
             SecondaryButton(
                 text = cancelText,
                 onClick = { coroutineScope.launch { it() /* Hide Sheet before cancelling */; onClickCancel() } },
             )
-            Spacer(modifier = Modifier.padding(4.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             PrimaryButton(
                 text = confirmText,
                 onClick = { coroutineScope.launch { it() /* Hide Sheet before confirming */; onClickConfirm() } },

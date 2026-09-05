@@ -2,6 +2,13 @@ package vegabobo.dsusideloader.ui.screen.about
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Brush
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.DeveloperMode
+import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.LibraryBooks
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +28,7 @@ import vegabobo.dsusideloader.ui.components.SimpleCard
 import vegabobo.dsusideloader.ui.components.Title
 import vegabobo.dsusideloader.ui.components.TopBar
 import vegabobo.dsusideloader.ui.screen.Destinations
+import vegabobo.dsusideloader.ui.theme.ScreenHorizontalPadding
 import vegabobo.dsusideloader.util.collectAsStateWithLifecycle
 
 object AboutLinks {
@@ -64,7 +72,7 @@ fun AboutScreen(
     }
 
     ApplicationScreen(
-        modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+        modifier = Modifier.padding(horizontal = ScreenHorizontalPadding),
         topBar = {
             TopBar(
                 barTitle = stringResource(id = R.string.about),
@@ -83,7 +91,7 @@ fun AboutScreen(
         )
         Title(
             stringResource(id = R.string.application),
-            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp),
+            modifier = Modifier.padding(start = 4.dp),
         )
         SimpleCard(
             addPadding = false,
@@ -91,17 +99,19 @@ fun AboutScreen(
             PreferenceItem(
                 title = stringResource(id = R.string.github_repo),
                 description = stringResource(id = R.string.github_repo_description),
+                icon = Icons.Outlined.Code,
                 onClick = { uriHandler.openUri(AboutLinks.REPOSITORY_URL) },
             )
             PreferenceItem(
                 title = stringResource(id = R.string.libraries_title),
                 description = stringResource(id = R.string.libraries_description),
+                icon = Icons.Outlined.LibraryBooks,
                 onClick = { navigate(Destinations.Libraries) },
             )
         }
         Title(
             stringResource(id = R.string.collaborators),
-            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp),
+            modifier = Modifier.padding(start = 4.dp),
         )
         SimpleCard(
             addPadding = false,
@@ -109,11 +119,13 @@ fun AboutScreen(
             PreferenceItem(
                 title = "VegaBobo",
                 description = stringResource(id = R.string.role_developer),
+                icon = Icons.Outlined.DeveloperMode,
                 onClick = { uriHandler.openUri(AboutLinks.VEGABOBO_GITHUB) },
             )
             PreferenceItem(
                 title = "WSTxda",
                 description = stringResource(id = R.string.role_design_icon),
+                icon = Icons.Outlined.Brush,
                 onClick = { uriHandler.openUri(AboutLinks.WSTXDA_GITHUB) },
             )
             val translators = stringResource(id = R.string.translators_list)
@@ -121,11 +133,13 @@ fun AboutScreen(
                 PreferenceItem(
                     title = stringResource(id = R.string.translators_title),
                     description = stringResource(id = R.string.translators_list),
+                    icon = Icons.Outlined.Translate,
                 )
             }
             PreferenceItem(
                 title = stringResource(id = R.string.contributors_title),
                 description = stringResource(id = R.string.contributors_text),
+                icon = Icons.Outlined.Group,
                 onClick = { uriHandler.openUri(AboutLinks.CONTRIBUTORS_URL) },
             )
         }

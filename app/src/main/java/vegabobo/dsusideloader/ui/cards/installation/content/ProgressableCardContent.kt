@@ -4,11 +4,16 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 import vegabobo.dsusideloader.ui.components.buttons.SecondaryButton
@@ -24,11 +29,16 @@ fun ProgressableCardContent(
     onClickFirstButton: (() -> Unit)? = null,
     onClickSecondButton: (() -> Unit)? = null,
 ) {
-    Text(text = text)
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     AnimatedVisibility(visible = showProgressBar) {
         val progressBarModifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 5.dp)
+            .padding(top = 14.dp, bottom = 6.dp)
+            .clip(RoundedCornerShape(percent = 50))
         if (isIndeterminate) {
             LinearProgressIndicator(modifier = progressBarModifier)
         } else {
@@ -38,8 +48,8 @@ fun ProgressableCardContent(
             )
         }
     }
-    Spacer(modifier = Modifier.padding(top = 4.dp))
-    Row {
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.weight(1F))
         if (onClickSecondButton != null) {
             SecondaryButton(
@@ -48,7 +58,7 @@ fun ProgressableCardContent(
             )
         }
         if (onClickFirstButton != null && onClickSecondButton != null) {
-            Spacer(modifier = Modifier.padding(end = 6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
         }
         if (onClickFirstButton != null) {
             PrimaryButton(
