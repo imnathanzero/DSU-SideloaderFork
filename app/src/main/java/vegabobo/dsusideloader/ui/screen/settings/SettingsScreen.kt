@@ -58,7 +58,7 @@ fun Settings(
             )
         },
     ) {
-        Title(title = stringResource(id = R.string.installation), modifier = Modifier.padding(start = 4.dp))
+        Title(title = stringResource(id = R.string.installation))
         SimpleCard(addPadding = false) {
             PreferenceItem(
                 title = stringResource(id = R.string.builtin_installer),
@@ -109,7 +109,6 @@ fun Settings(
         if (uiState.isDevOptEnabled) {
             Title(
                 title = stringResource(id = R.string.developer_options),
-                modifier = Modifier.padding(start = 4.dp),
             )
             SimpleCard(addPadding = false) {
                 PreferenceItem(
@@ -138,7 +137,7 @@ fun Settings(
             }
         }
 
-        Title(title = stringResource(id = R.string.other), modifier = Modifier.padding(start = 4.dp))
+        Title(title = stringResource(id = R.string.other))
         SimpleCard(addPadding = false) {
             PreferenceItem(
                 title = stringResource(id = R.string.operation_mode),
