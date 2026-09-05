@@ -19,7 +19,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import vegabobo.dsusideloader.R
 import vegabobo.dsusideloader.preferences.AppPrefs
@@ -107,9 +106,7 @@ fun Settings(
         }
 
         if (uiState.isDevOptEnabled) {
-            Title(
-                title = stringResource(id = R.string.developer_options),
-            )
+            Title(title = stringResource(id = R.string.developer_options))
             SimpleCard(addPadding = false) {
                 PreferenceItem(
                     title = stringResource(id = R.string.storage_check_title),
