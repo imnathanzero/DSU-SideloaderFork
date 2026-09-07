@@ -258,6 +258,5 @@ fun Home(
             )
 
         SheetDisplayState.NONE -> {}
-        SheetDisplayState.IMAGESIZE_WARNING -> {}
     }
 }
