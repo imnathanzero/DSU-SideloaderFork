@@ -75,9 +75,6 @@ class HomeViewModel @Inject constructor(
     private fun updateInstallationCard(update: (InstallationCardState) -> InstallationCardState) =
         _uiState.update { it.copy(installationCard = update(it.installationCard.copy())) }
 
-    private fun updateImageSizeCard(update: (ImageSizeCardState) -> ImageSizeCardState) =
-        _uiState.update { it.copy(imageSizeCard = update(it.imageSizeCard.copy())) }
-
     private fun updateSheetState(sheetDisplay: SheetDisplayState) =
         _uiState.update { it.copy(sheetDisplay = sheetDisplay) }
 
@@ -185,7 +182,6 @@ class HomeViewModel @Inject constructor(
 
     fun onClickInstall() {
         session.userSelection.setUserDataSize(uiState.value.userDataCard.text)
-        session.userSelection.setImageSize(uiState.value.imageSizeCard.text)
         updateSheetState(SheetDisplayState.CONFIRM_INSTALLATION)
     }
 
@@ -394,20 +390,6 @@ class HomeViewModel @Inject constructor(
         }
 
         updateUserdataCard { it.copy(text = sizeWithSuffix) }
-    }
-
-    fun onCheckImageSizeCard() {
-        if (!uiState.value.imageSizeCard.isSelected) {
-            updateSheetState(SheetDisplayState.IMAGESIZE_WARNING)
-        } else {
-            dismissSheet()
-        }
-        updateImageSizeCard { it.copy(isSelected = !it.isSelected, text = "") }
-    }
-
-    fun updateImageSize(input: String) {
-        val inputWithSuffix = FilenameUtils.appendToDigitsToString(input, "b")
-        updateImageSizeCard { it.copy(text = inputWithSuffix) }
     }
 
     fun takeUriPermission(uri: Uri) {
