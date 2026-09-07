@@ -2,6 +2,7 @@ package vegabobo.dsusideloader.model
 
 import android.net.Uri
 import kotlinx.coroutines.flow.MutableStateFlow
+import vegabobo.dsusideloader.util.FilenameUtils
 import vegabobo.dsusideloader.util.OperationMode
 
 data class InstallationPreferences(
