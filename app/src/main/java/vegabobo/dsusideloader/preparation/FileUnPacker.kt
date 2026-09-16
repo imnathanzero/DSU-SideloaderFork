@@ -19,9 +19,6 @@ class FileUnPacker(
 ) {
 
     private var finalFile: DocumentFile = storageManager.createDocumentFile(outputFile)
-
-    private var outputStream = storageManager.openOutputStream(finalFile.uri)
-    private var inputStream = storageManager.openInputStream(inputFile)
     private val inputFileSize = storageManager.getFilesizeFromUri(inputFile)
 
     private fun copy(
@@ -35,42 +32,58 @@ class FileUnPacker(
         while (-1 != inputStr.read(buffer)
                 .also { n = it } && !installationJob.isCancelled
         ) {
-            readed += buffer.size
+            readed += n
             onReadedBuffer(readed)
             outputStr.write(buffer, 0, n)
         }
-        inputStr.close()
         outputStr.flush()
-        outputStr.close()
     }
 
     fun pack(): Pair<Uri, Long> {
-        copy(inputStream, GzipCompressorOutputStream(outputStream)) {
-            updateProgress(inputFileSize, it)
+        storageManager.openInputStream(inputFile).use { inputStr ->
+            storageManager.openOutputStream(finalFile.uri).use { rawOut ->
+                GzipCompressorOutputStream(rawOut).use { gzOut ->
+                    copy(inputStr, gzOut) {
+                        updateProgress(inputFileSize, it)
+                    }
+                }
+            }
         }
         val fileLength = storageManager.getFilesizeFromUri(finalFile.uri)
         return Pair(finalFile.uri, fileLength)
     }
 
     fun unpack(): Pair<Uri, Long> {
-        val archiveInputStream =
-            with(storageManager.getFilenameFromUri(inputFile)) {
-                when {
-                    endsWith("xz") -> XZCompressorInputStream(inputStream)
-                    endsWith("gz") -> GzipCompressorInputStream(inputStream)
-                    endsWith("gzip") -> GzipCompressorInputStream(inputStream)
-                    else -> throw Exception("File type not supported")
+        storageManager.openInputStream(inputFile).use { rawIn ->
+            val filename = storageManager.getFilenameFromUri(inputFile)
+            val archiveInputStream: InputStream = when {
+                filename.endsWith("xz") -> XZCompressorInputStream(rawIn)
+                filename.endsWith("gz") || filename.endsWith("gzip") -> GzipCompressorInputStream(rawIn)
+                else -> throw Exception("File type not supported")
+            }
+            archiveInputStream.use { inputStr ->
+                storageManager.openOutputStream(finalFile.uri).use { outputStr ->
+                    copy(inputStr, outputStr) {
+                        val count = if (archiveInputStream is XZCompressorInputStream) {
+                            archiveInputStream.compressedCount
+                        } else if (archiveInputStream is GzipCompressorInputStream) {
+                            archiveInputStream.compressedCount
+                        } else {
+                            it
+                        }
+                        updateProgress(inputFileSize, count)
+                    }
                 }
             }
-        copy(archiveInputStream, outputStream) {
-            updateProgress(inputFileSize, archiveInputStream.compressedCount)
         }
         val fileLength = storageManager.getFilesizeFromUri(finalFile.uri)
         return Pair(finalFile.uri, fileLength)
     }
 
     private fun updateProgress(fileSize: Long, readed: Long) {
-        val percent: Float = readed.toFloat() / fileSize.toFloat()
-        onProgressChange(percent)
+        if (fileSize > 0) {
+            val percent: Float = (readed.toFloat() / fileSize.toFloat()).coerceIn(0F, 1F)
+            onProgressChange(percent)
+        }
     }
 }

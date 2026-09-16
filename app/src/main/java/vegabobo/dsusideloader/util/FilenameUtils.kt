@@ -2,7 +2,6 @@ package vegabobo.dsusideloader.util
 
 import android.content.ContentResolver
 import android.content.Context
-import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.documentfile.provider.DocumentFile
@@ -31,29 +30,39 @@ class FilenameUtils {
          */
         fun getFilePath(uri: Uri, addQuotes: Boolean = false): String {
             val input = uri.path.toString()
-            val safStorage = input.split("/document/")[1].replace("/tree/", "")
-            val path = safStorage.split(":")[1]
-            if (path.contains("/storage/emulated")) {
-                return if (addQuotes) "'file://'$path" else "file://$path"
+            val finalPath = try {
+                if (input.contains("/document/")) {
+                    val safStorage = input.split("/document/")[1].replace("/tree/", "")
+                    val path = safStorage.split(":")[1]
+                    if (path.contains("/storage/emulated")) {
+                        "file://$path"
+                    } else if (safStorage.contains("primary")) {
+                        "file:///storage/emulated/0/$path"
+                    } else {
+                        "file:///storage/" + safStorage.replace(":", "/")
+                    }
+                } else {
+                    uri.toString()
+                }
+            } catch (_: Exception) {
+                uri.toString()
             }
-            return if (safStorage.contains("primary")) {
-                val storagePath = "file:///storage/emulated/0/"
-                val finalPath = "$storagePath$path"
-                return if (addQuotes) "'$finalPath'" else finalPath
-            } else {
-                val storagePath = "file:///storage/"
-                val finalPath = storagePath + safStorage.replace(":", "/")
-                if (addQuotes) "'$finalPath'" else finalPath
-            }
+            return if (addQuotes) "'$finalPath'" else finalPath
         }
 
         fun queryName(resolver: ContentResolver, uri: Uri): String {
-            val returnCursor: Cursor = resolver.query(uri, null, null, null, null)!!
-            val nameIndex: Int = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            returnCursor.moveToFirst()
-            val name: String = returnCursor.getString(nameIndex)
-            returnCursor.close()
-            return name
+            return try {
+                resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1 && cursor.moveToFirst()) {
+                        cursor.getString(nameIndex) ?: (uri.lastPathSegment ?: "")
+                    } else {
+                        uri.lastPathSegment ?: ""
+                    }
+                } ?: (uri.lastPathSegment ?: "")
+            } catch (_: Exception) {
+                uri.lastPathSegment ?: ""
+            }
         }
 
         fun getDigits(input: String): String {
@@ -61,7 +70,11 @@ class FilenameUtils {
         }
 
         fun getLengthFromFile(context: Context, uri: Uri): Long {
-            return DocumentFile.fromSingleUri(context, uri)!!.length()
+            return try {
+                DocumentFile.fromSingleUri(context, uri)?.length() ?: -1L
+            } catch (_: Exception) {
+                -1L
+            }
         }
     }
 }

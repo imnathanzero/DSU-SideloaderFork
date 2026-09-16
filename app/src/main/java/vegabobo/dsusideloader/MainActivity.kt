@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
 
         if (session.getOperationMode() == OperationMode.SYSTEM) {
             val service = Intent(this, PrivilegedSystemService::class.java)
-            bindService(service, PrivilegedProvider.connection, Context.BIND_AUTO_CREATE)
+            applicationContext.bindService(service, PrivilegedProvider.connection, Context.BIND_AUTO_CREATE)
             return
         }
 
@@ -130,7 +130,6 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Shell.getShell {}
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
@@ -139,7 +138,7 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
             }
         }
 
-        if (savedInstanceState == null) {
+        Shell.getShell {
             setupSessionOperationMode()
             setupService()
         }

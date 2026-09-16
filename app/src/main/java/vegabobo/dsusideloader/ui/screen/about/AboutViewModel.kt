@@ -94,26 +94,28 @@ class AboutViewModel @Inject constructor(
                 updateUpdaterCard { it.copy(isDownloading = false) }
                 return@launch
             }
-            val input = try {
-                URL(response.apkUrl).openStream()
+            try {
+                URL(response.apkUrl).openStream().use { input ->
+                    FileOutputStream(finalFile).use { output ->
+                        val buffer = ByteArray(8 * 1024)
+                        var n: Int
+                        var readed: Long = 0
+                        while (-1 != input.read(buffer)
+                                .also { n = it }
+                        ) {
+                            readed += n
+                            output.write(buffer, 0, n)
+                            if (length > 0) {
+                                val progress = (readed.toFloat() / length.toFloat()).coerceIn(0F, 1F)
+                                updateUpdaterCard { it.copy(progressBar = progress) }
+                            }
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 updateUpdaterCard { it.copy(isDownloading = false) }
                 return@launch
             }
-            val output = FileOutputStream(finalFile)
-
-            val buffer = ByteArray(8 * 1024)
-            var n: Int
-            var readed: Long = 0
-            while (-1 != input.read(buffer)
-                    .also { n = it }
-            ) {
-                readed += buffer.size
-                output.write(buffer, 0, n)
-                updateUpdaterCard { it.copy(progressBar = readed.toFloat() / length.toFloat()) }
-            }
-            input.close()
-            output.close()
 
             updateUpdaterCard { it.copy(isDownloading = false) }
             val apkUri = FileProvider.getUriForFile(

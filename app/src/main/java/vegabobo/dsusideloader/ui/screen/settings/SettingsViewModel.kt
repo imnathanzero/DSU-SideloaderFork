@@ -32,15 +32,17 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     fun reloadPreferences() {
-        uiState.value.preferences.forEach { entry ->
-            viewModelScope.launch {
-                val isEnabled = readBoolPref(entry.key)
-                togglePreference(entry.key, isEnabled)
+        viewModelScope.launch {
+            val updatedMap = HashMap(uiState.value.preferences)
+            updatedMap.keys.forEach { key ->
+                updatedMap[key] = readBoolPref(key)
             }
-        }
-
-        if (session.isRoot()) {
-            _uiState.update { it.copy(isRoot = true) }
+            _uiState.update {
+                it.copy(
+                    preferences = updatedMap,
+                    isRoot = session.isRoot(),
+                )
+            }
         }
     }
 

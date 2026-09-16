@@ -14,15 +14,29 @@ class LogcatDiagnostic(
 ) {
 
     private val tag = this.javaClass.simpleName
-    var logs = ""
+    private val logBuilder = StringBuilder()
+    val logs: String
+        get() = synchronized(logBuilder) { logBuilder.toString() }
+
     val isLogging = AtomicBoolean(false)
     var shouldLogEverything = false
+    private var lastLogNotificationTime = 0L
+
+    companion object {
+        private val PROGRESS_REGEX = "(progress: )([\\d+/]+)".toRegex()
+        private val PARTITION_REGEX = "(partition name: ([a-z+_]+))".toRegex()
+    }
 
     fun startLogging(prependString: String) {
         if (isLogging.get()) {
             destroy()
         }
-        logs = ""
+        synchronized(logBuilder) {
+            logBuilder.clear()
+            if (prependString.isNotEmpty()) {
+                logBuilder.append(prependString).append("\n")
+            }
+        }
         isLogging.set(true)
         Log.d(tag, "startLogging(), logEveryting: $shouldLogEverything, isLogging: ${isLogging.get()}")
         CmdRunner.run("logcat -c")
@@ -33,10 +47,6 @@ class LogcatDiagnostic(
                 "logcat -v tag gsid:* *:S DynamicSystemService:* *:S DynamicSystemInstallationService:* *:S DynSystemInstallationService:* *:S"
             }
         CmdRunner.runReadEachLine(logCmd) {
-            if (logs.isEmpty()) {
-                logs = "$prependString\n"
-            }
-
             if (it.contains("DynamicSystemService") && it.contains("startInstallation")) {
                 onStepUpdate(InstallationStep.INSTALLING)
                 onInstallationProgressUpdate(0F, "userdata")
@@ -46,8 +56,14 @@ class LogcatDiagnostic(
                 return@runReadEachLine
             }
 
-            logs += "$it\n"
-            onLogLineReceived()
+            synchronized(logBuilder) {
+                logBuilder.append(it).append("\n")
+            }
+            val now = System.currentTimeMillis()
+            if (now - lastLogNotificationTime > 250) {
+                lastLogNotificationTime = now
+                onLogLineReceived()
+            }
 
             /**
              * Cannot install DSU when running a installed DSU.
@@ -144,15 +160,17 @@ class LogcatDiagnostic(
             if (it.contains("IN_PROGRESS")) {
                 if (it.contains("progress:") && it.contains("partition name:")) {
                     try {
-                        val progressRgx = "(progress: )([\\d+/]+)".toRegex()
-                        val partitionRgx = "(partition name: ([a-z+_]+))".toRegex()
+                        val progressMatch = PROGRESS_REGEX.find(it)
+                        val partitionMatch = PARTITION_REGEX.find(it)
 
-                        val progressText = progressRgx.find(it)!!.groupValues[2].split("/")
-                        val progress = (progressText[0].toFloat() / progressText[1].toFloat())
-
-                        val partitionText = partitionRgx.find(it)!!.groupValues[2]
-
-                        onInstallationProgressUpdate(progress, partitionText)
+                        if (progressMatch != null && partitionMatch != null) {
+                            val progressText = progressMatch.groupValues[2].split("/")
+                            val progress = (progressText[0].toFloat() / progressText[1].toFloat())
+                            val partitionText = partitionMatch.groupValues[2]
+                            onInstallationProgressUpdate(progress, partitionText)
+                        } else {
+                            onStepUpdate(InstallationStep.PROCESSING_LOG_READABLE)
+                        }
                     } catch (_: Exception) {
                         onStepUpdate(InstallationStep.PROCESSING_LOG_READABLE)
                     }
