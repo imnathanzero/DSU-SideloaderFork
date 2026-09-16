@@ -24,6 +24,9 @@
     <string name="file_unsupported">Arquivo não suportado</string>
     <string name="clear">Limpar</string>
     <string name="install">Instalar</string>
+    <string name="update">Atualizar</string>
+    <string name="preserve_userdata">Manter dados do usuário</string>
+    <string name="preserve_userdata_desc">Preservar partição de dados do usuário da DSU instalada</string>
     <!-- Installation dialog -->
     <string name="proceed_installation">Continuar a instalação?</string>
     <string name="proceed_installation_description">A instalação será feita usando os parâmetros mostrados abaixo:</string>

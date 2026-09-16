@@ -84,8 +84,13 @@ class HomeViewModel @Inject constructor(
 
     fun resetInstallationCard() =
         _uiState.update {
+            val step = if (it.isDsuInstalled) {
+                InstallationStep.DSU_ALREADY_INSTALLED
+            } else {
+                InstallationStep.NOT_INSTALLING
+            }
             it.copy(
-                installationCard = InstallationCardState(),
+                installationCard = InstallationCardState(installationStep = step),
                 sheetDisplay = SheetDisplayState.NONE,
             )
         }
@@ -106,6 +111,13 @@ class HomeViewModel @Inject constructor(
                     return@run
                 }
                 if (isInstalled) {
+                    _uiState.update {
+                        it.copy(
+                            isDsuInstalled = true,
+                            userDataCard = it.userDataCard.copy(preserveSelected = true),
+                        )
+                    }
+                    session.preferences.preserveUserdata = true
                     updateInstallationCard { it.copy(installationStep = InstallationStep.DSU_ALREADY_INSTALLED) }
                     return@run
                 }
@@ -158,7 +170,7 @@ class HomeViewModel @Inject constructor(
             _uiState.update { it.copy(shouldKeepScreenOn = shouldKeepScreenOn) }
 
             disabledStorageCheck = readBoolPref(AppPrefs.DISABLE_STORAGE_CHECK)
-            Log.d(tag, "disabledStorageCheck: $shouldKeepScreenOn")
+            Log.d(tag, "disabledStorageCheck: $disabledStorageCheck")
         }
     }
 
@@ -201,7 +213,7 @@ class HomeViewModel @Inject constructor(
     fun onConfirmInstallationSheet() {
         dismissSheet()
         updateInstallationCard { it.copy(installationStep = InstallationStep.PROCESSING) }
-        installationJob = Job()
+        installationJob = kotlinx.coroutines.SupervisorJob(viewModelScope.coroutineContext[kotlinx.coroutines.Job])
         viewModelScope.launch(Dispatchers.IO + installationJob) {
             session.preferences.isUnmountSdCard = readBoolPref(AppPrefs.UMOUNT_SD)
             session.preferences.useBuiltinInstaller = readBoolPref(AppPrefs.USE_BUILTIN_INSTALLER)
@@ -260,6 +272,7 @@ class HomeViewModel @Inject constructor(
             onCreatePartition = this::onCreatePartition,
             onInstallationStepUpdate = this::onStepUpdate,
             onInstallationSuccess = this::onRootInstallationSuccess,
+            preserveUserdata = session.preferences.preserveUserdata,
         ).invoke()
     }
 
@@ -353,7 +366,14 @@ class HomeViewModel @Inject constructor(
             remove()
             forceStopPackage("com.android.dynsystem")
             dismissSheet()
-            resetInstallationCard()
+            _uiState.update {
+                it.copy(
+                    installationCard = InstallationCardState(),
+                    sheetDisplay = SheetDisplayState.NONE,
+                    isDsuInstalled = false,
+                )
+            }
+            session.preferences.preserveUserdata = false
         }
     }
 
@@ -385,6 +405,11 @@ class HomeViewModel @Inject constructor(
 
     fun onCheckUserdataCard() =
         updateUserdataCard { it.copy(isSelected = !it.isSelected, text = "") }
+
+    fun onCheckPreserveUserdata(checked: Boolean) {
+        updateUserdataCard { it.copy(preserveSelected = checked) }
+        session.preferences.preserveUserdata = checked
+    }
 
     fun updateUserdataSize(input: String) {
         val selectedSize = FilenameUtils.getDigits(input)

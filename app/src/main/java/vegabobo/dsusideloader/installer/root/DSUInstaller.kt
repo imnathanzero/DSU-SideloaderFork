@@ -49,6 +49,7 @@ class DSUInstaller(
     private val onCreatePartition: (partition: String) -> Unit,
     private val onInstallationStepUpdate: (step: InstallationStep) -> Unit,
     private val onInstallationSuccess: () -> Unit,
+    private val preserveUserdata: Boolean = false,
 ) : () -> Unit, DynamicSystemImpl() {
 
     private val tag = this.javaClass.simpleName
@@ -94,7 +95,7 @@ class DSUInstaller(
         if (!name.endsWith(".img")) {
             return false
         }
-        val partitionName = name.substringAfterLast(".")
+        val partitionName = name.substringBeforeLast(".").substringAfterLast("/")
         return isPartitionSupported(partitionName)
     }
 
@@ -212,7 +213,7 @@ class DSUInstaller(
     private fun installImageFromAnEntry(entry: ZipEntry, inputStream: InputStream) {
         val fileName = entry.name
         Log.d(tag, "Installing: $fileName")
-        val partitionName = fileName.substring(0, fileName.length - 4)
+        val partitionName = fileName.substringBeforeLast(".").substringAfterLast("/")
         val uncompressedSize = entry.size
         installImage(partitionName, uncompressedSize, inputStream)
     }
@@ -223,13 +224,15 @@ class DSUInstaller(
             onInstallationError(InstallationStep.ERROR_ALREADY_RUNNING_DYN_OS, "")
             return
         }
-        if (isInstalled) {
+        if (isInstalled && !preserveUserdata) {
             onInstallationError(InstallationStep.ERROR_REQUIRES_DISCARD_DSU, "")
             return
         }
         forceStopDSU()
         startInstallation(Constants.DEFAULT_SLOT)
-        installWritablePartition("userdata", userdataSize)
+        if (!preserveUserdata || !isInstalled) {
+            installWritablePartition("userdata", userdataSize)
+        }
         when (dsuInstallation.type) {
             Type.SINGLE_SYSTEM_IMAGE -> {
                 installImage(

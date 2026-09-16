@@ -19,6 +19,7 @@ import vegabobo.dsusideloader.ui.components.DialogLikeBottomSheet
 fun ConfirmInstallationSheet(
     filename: String,
     userdata: String,
+    preserveUserdata: Boolean = false,
     onClickConfirm: () -> Unit,
     onClickCancel: () -> Unit,
 ) {
@@ -34,12 +35,21 @@ fun ConfirmInstallationSheet(
                 text = filename,
                 textColor = MaterialTheme.colorScheme.onBackground,
             )
-            DialogItem(
-                icon = Icons.Outlined.Storage,
-                title = "${stringResource(id = R.string.userdata_size)}:",
-                text = "${userdata}GB",
-                textColor = MaterialTheme.colorScheme.onBackground,
-            )
+            if (preserveUserdata) {
+                DialogItem(
+                    icon = Icons.Outlined.Storage,
+                    title = "${stringResource(id = R.string.preserve_userdata)}:",
+                    text = stringResource(id = R.string.yes),
+                    textColor = MaterialTheme.colorScheme.onBackground,
+                )
+            } else {
+                DialogItem(
+                    icon = Icons.Outlined.Storage,
+                    title = "${stringResource(id = R.string.userdata_size)}:",
+                    text = "${userdata}GB",
+                    textColor = MaterialTheme.colorScheme.onBackground,
+                )
+            }
         },
         confirmText = stringResource(id = R.string.proceed),
         cancelText = stringResource(id = R.string.cancel),

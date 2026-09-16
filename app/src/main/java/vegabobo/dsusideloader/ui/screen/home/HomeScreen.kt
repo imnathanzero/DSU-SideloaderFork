@@ -126,8 +126,10 @@ fun Home(
                 UserdataCard(
                     isEnabled = uiState.isInstalling(),
                     uiState = uiState.userDataCard,
+                    isDsuInstalled = uiState.isDsuInstalled,
                     onCheckedChange = { homeViewModel.onCheckUserdataCard() },
                     onValueChange = { homeViewModel.updateUserdataSize(it) },
+                    onPreserveCheckedChange = { homeViewModel.onCheckPreserveUserdata(it) },
                 )
                 DsuInfoCard(
                     onClickViewDocs = { uriHandler.openUri(HomeLinks.DSU_DOCS) },
@@ -142,6 +144,7 @@ fun Home(
             ConfirmInstallationSheet(
                 filename = homeViewModel.obtainSelectedFilename(),
                 userdata = homeViewModel.session.userSelection.getUserDataSizeAsGB(),
+                preserveUserdata = uiState.isDsuInstalled && uiState.userDataCard.preserveSelected,
                 onClickConfirm = { homeViewModel.onConfirmInstallationSheet() },
                 onClickCancel = { homeViewModel.dismissSheet() },
             )
