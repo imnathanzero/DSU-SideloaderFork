@@ -91,7 +91,10 @@ fun CustomBottomSheet(
                         .padding(end = 18.dp, start = 18.dp, bottom = insets.calculateBottomPadding() + 14.dp, top = 14.dp),
                 ) {
                     // Shortcut used to hide sheet by event
-                    content { sheetState.hide(); shouldCallOnDismiss.value = false; }
+                    content {
+                        sheetState.hide()
+                        shouldCallOnDismiss.value = false
+                    }
                 }
             }
         },

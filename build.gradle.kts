@@ -21,6 +21,6 @@ val versionCode by extra { 8 }
 val versionName by extra { "2.03" }
 val packageName by extra { "vegabobo.dsusideloader" }
 
-task("clean") {
-    delete(project.buildDir)
+tasks.register<Delete>("clean") {
+    delete(rootProject.layout.buildDirectory)
 }

@@ -202,7 +202,8 @@ class LogcatDiagnostic(
              * When installing, Android 10 only
              * D/DynSystemInstallationService: postStatus(): statusCode=2, causeCode=0
              */
-            if (it.contains("postStatus(): statusCode=2" /* STATUS_IN_PROGRESS */)) {
+            // STATUS_IN_PROGRESS
+            if (it.contains("postStatus(): statusCode=2")) {
                 onStepUpdate(InstallationStep.PROCESSING_LOG_READABLE)
             }
 
@@ -210,13 +211,15 @@ class LogcatDiagnostic(
              * When installation succeed, Android 10 only
              * D/DynSystemInstallationService: postStatus(): statusCode=3, causeCode=1
              */
-            if (it.contains("postStatus(): statusCode=3" /* STATUS_READY */)) {
+            // STATUS_READY
+            if (it.contains("postStatus(): statusCode=3")) {
                 onInstallationSuccess()
                 destroy()
                 return@runReadEachLine
             }
 
-            if (it.contains("postStatus(): statusCode=1" /* STATUS_NOT_STARTED */)) {
+            // STATUS_NOT_STARTED
+            if (it.contains("postStatus(): statusCode=1")) {
                 onInstallationError(InstallationStep.ERROR, it)
                 destroy()
                 return@runReadEachLine

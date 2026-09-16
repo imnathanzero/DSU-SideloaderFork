@@ -59,12 +59,22 @@ fun DialogLikeBottomSheet(
             Spacer(modifier = Modifier.weight(1F))
             SecondaryButton(
                 text = cancelText,
-                onClick = { coroutineScope.launch { hideSheet(); onClickCancel() } },
+                onClick = {
+                    coroutineScope.launch {
+                        hideSheet()
+                        onClickCancel()
+                    }
+                },
             )
             Spacer(modifier = Modifier.padding(4.dp))
             PrimaryButton(
                 text = confirmText,
-                onClick = { coroutineScope.launch { hideSheet(); onClickConfirm() } },
+                onClick = {
+                    coroutineScope.launch {
+                        hideSheet()
+                        onClickConfirm()
+                    }
+                },
             )
         }
     }
