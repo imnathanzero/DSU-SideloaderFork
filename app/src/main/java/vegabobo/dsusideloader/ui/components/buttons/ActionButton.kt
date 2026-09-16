@@ -42,12 +42,11 @@ fun ActionButton(
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorButton ?: defaultContainer,
                 contentColor = colorText ?: defaultContent,
+                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
             ),
         ) {
-            Text(
-                text = text,
-                color = colorText ?: defaultContent,
-            )
+            Text(text = text)
             content()
         }
     }
