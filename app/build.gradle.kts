@@ -1,7 +1,7 @@
 import java.util.Properties
 
 fun getReleaseSigningConfig(): File {
-    return File(".sign/dsu_sideloader.prop")
+    return rootProject.file(".sign/dsu_sideloader.prop")
 }
 
 plugins {
@@ -37,32 +37,38 @@ android {
 
     signingConfigs {
         val releaseSigningConfig = getReleaseSigningConfig()
-        if (releaseSigningConfig.exists()) {
-            create("release") {
-                /**
-                 * .sign/dsu_sideloader.prop
-                 *
-                 * keystore=some/path/keystore.jks
-                 * keystore_pw=keystore_password
-                 * alias=alias
-                 * alias_pw=alias_password
-                 *
-                 */
-                val props = Properties()
-                props.load(releaseSigningConfig.inputStream())
+        val envKeystore = System.getenv("SIGNING_KEYSTORE_PATH")
+        val envStorePassword = System.getenv("SIGNING_STORE_PASSWORD")
+        val envKeyAlias = System.getenv("SIGNING_KEY_ALIAS")
+        val envKeyPassword = System.getenv("SIGNING_KEY_PASSWORD")
 
-                storeFile = File(props.getProperty("keystore"))
-                storePassword = props.getProperty("keystore_pw")
-                keyAlias = props.getProperty("alias")
-                keyPassword = props.getProperty("alias_pw")
+        val hasEnvSigning = !envKeystore.isNullOrEmpty() && rootProject.file(envKeystore).exists()
+        val hasPropSigning = releaseSigningConfig.exists()
+
+        if (hasEnvSigning || hasPropSigning) {
+            create("release") {
+                if (hasEnvSigning) {
+                    storeFile = rootProject.file(envKeystore)
+                    storePassword = envStorePassword
+                    keyAlias = envKeyAlias
+                    keyPassword = envKeyPassword
+                } else {
+                    val props = Properties()
+                    props.load(releaseSigningConfig.inputStream())
+
+                    storeFile = rootProject.file(props.getProperty("keystore"))
+                    storePassword = props.getProperty("keystore_pw")
+                    keyAlias = props.getProperty("alias")
+                    keyPassword = props.getProperty("alias_pw")
+                }
             }
         }
     }
 
     buildTypes {
         getByName("release") {
-            if (getReleaseSigningConfig().exists()) {
-                signingConfig = signingConfigs.getByName("release")
+            signingConfigs.findByName("release")?.let {
+                signingConfig = it
             }
             isMinifyEnabled = true
             isShrinkResources = true
@@ -72,7 +78,7 @@ android {
             )
         }
         create("miniDebug") {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             isDebuggable = true
             isMinifyEnabled = true
             isShrinkResources = true
