@@ -14,13 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun PreferenceItem(
+    modifier: Modifier = Modifier,
     title: String,
     description: String = "",
     icon: ImageVector? = null,
@@ -28,44 +28,59 @@ fun PreferenceItem(
     isChecked: Boolean = false,
     showToggle: Boolean = false,
     isEnabled: Boolean = true,
+    horizontalPadding: Dp = 16.dp,
+    verticalPadding: Dp = 12.dp,
 ) {
+    val contentAlpha = if (isEnabled) 1.0f else 0.38f
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = { onClick(isChecked) }, enabled = isEnabled)
             .padding(
-                start = 17.dp,
-                end = 17.dp,
-                bottom = 12.dp,
-                top = 12.dp,
+                start = horizontalPadding,
+                end = horizontalPadding,
+                bottom = verticalPadding,
+                top = verticalPadding,
             ),
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.padding(end = 22.dp),
+                tint = if (isEnabled) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                },
+                modifier = Modifier.padding(end = 16.dp),
             )
         }
-        Row(modifier = Modifier.weight(0.5F)) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterVertically),
-            ) {
+        Column(
+            modifier = Modifier
+                .weight(1F)
+                .align(Alignment.CenterVertically),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (isEnabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha)
+                },
+            )
+            if (description.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
                 Text(
-                    text = title,
-                    fontSize = 20.sp,
-                    style = MaterialTheme.typography.headlineMedium,
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isEnabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
+                    },
                 )
-                if (description.isNotEmpty()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.alpha(0.60F),
-                    )
-                }
             }
         }
         if (showToggle) {
@@ -73,7 +88,7 @@ fun PreferenceItem(
                 checked = isChecked,
                 enabled = isEnabled,
                 onCheckedChange = { onClick(isChecked) },
-                modifier = Modifier.padding(start = 8.dp),
+                modifier = Modifier.padding(start = 12.dp),
             )
         }
     }

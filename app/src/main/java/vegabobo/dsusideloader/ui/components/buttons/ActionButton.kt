@@ -1,13 +1,15 @@
 package vegabobo.dsusideloader.ui.components.buttons
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun ActionButton(
@@ -21,24 +23,30 @@ fun ActionButton(
     content: @Composable () -> Unit = {},
 ) {
     if (textButton) {
-        TextButton(onClick = onClick) {
-            Text(text = text)
-        }
-    } else {
-        FilledTonalButton(
+        TextButton(
             modifier = modifier,
             onClick = onClick,
             enabled = isEnabled,
-            colors =
-            if (colorButton != null) {
-                ButtonDefaults.buttonColors(colorButton)
-            } else {
-                ButtonDefaults.buttonColors()
-            },
+        ) {
+            Text(text = text)
+        }
+    } else {
+        val defaultContainer = MaterialTheme.colorScheme.primary
+        val defaultContent = MaterialTheme.colorScheme.onPrimary
+
+        Button(
+            modifier = modifier,
+            onClick = onClick,
+            enabled = isEnabled,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorButton ?: defaultContainer,
+                contentColor = colorText ?: defaultContent,
+            ),
         ) {
             Text(
                 text = text,
-                color = colorText ?: MaterialTheme.colorScheme.surface,
+                color = colorText ?: defaultContent,
             )
             content()
         }

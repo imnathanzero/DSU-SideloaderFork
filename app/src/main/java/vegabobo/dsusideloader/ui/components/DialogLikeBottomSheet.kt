@@ -47,7 +47,7 @@ fun DialogLikeBottomSheet(
         title = title,
         icon = icon,
         onDismiss = onDismiss,
-    ) {
+    ) { hideSheet ->
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = text,
@@ -59,12 +59,12 @@ fun DialogLikeBottomSheet(
             Spacer(modifier = Modifier.weight(1F))
             SecondaryButton(
                 text = cancelText,
-                onClick = { coroutineScope.launch { it() /* Hide Sheet before cancelling */; onClickCancel() } },
+                onClick = { coroutineScope.launch { hideSheet(); onClickCancel() } },
             )
             Spacer(modifier = Modifier.padding(4.dp))
             PrimaryButton(
                 text = confirmText,
-                onClick = { coroutineScope.launch { it() /* Hide Sheet before confirming */; onClickConfirm() } },
+                onClick = { coroutineScope.launch { hideSheet(); onClickConfirm() } },
             )
         }
     }

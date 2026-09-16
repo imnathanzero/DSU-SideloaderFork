@@ -34,19 +34,17 @@ fun BottomSheetContent(
             .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F),
             shape = CircleShape,
             modifier = Modifier
-                .alpha(0.1F)
-                .height(6.dp)
+                .height(4.dp)
                 .width(32.dp)
-                .fillMaxWidth()
                 .align(Alignment.CenterHorizontally),
             content = {},
         )
         Spacer(modifier = Modifier.height(12.dp))
         Icon(
-            tint = MaterialTheme.colorScheme.onBackground,
+            tint = MaterialTheme.colorScheme.primary,
             imageVector = icon,
             contentDescription = "icon",
             modifier = Modifier
