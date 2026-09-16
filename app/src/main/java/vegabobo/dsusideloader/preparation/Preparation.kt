@@ -4,7 +4,6 @@ import android.net.Uri
 import java.math.BigInteger
 import kotlinx.coroutines.Job
 import vegabobo.dsusideloader.core.StorageManager
-import vegabobo.dsusideloader.model.DSUConstants
 import vegabobo.dsusideloader.model.DSUInstallationSource
 import vegabobo.dsusideloader.model.Session
 
@@ -18,7 +17,6 @@ class Preparation(
     private val onPreparationFinished: (preparedDSU: DSUInstallationSource) -> Unit,
 ) : () -> Unit {
 
-    private val userSelectedImageSize = session.userSelection.userSelectedImageSize
     private val userSelectedFileUri = session.userSelection.selectedFileUri
 
     override fun invoke() {
@@ -123,32 +121,38 @@ class Preparation(
 
     private fun prepareGz(gzFile: Uri): Pair<Uri, Long> {
         val uri = getSafeUri(gzFile)
-        if (userSelectedImageSize != DSUConstants.DEFAULT_IMAGE_SIZE) {
-            return Pair(uri, userSelectedImageSize)
-        }
-
         onStepUpdate(InstallationStep.PROCESSING)
         val fileSize = storageManager.getFilesizeFromUri(uri)
-        val three_gb = Int.MAX_VALUE.toLong() * 1.5 // 2^32 * 0.75
+        val threeGb = 3_221_225_470L
 
-        // If the .gz is smaller than 3gb, then try returning the image size
-        // by reading the lasts four bytes.
-        if (fileSize < three_gb) {
-            val inputStream = storageManager.openInputStream(uri)
-            inputStream.skip(fileSize - 4)
-            val bytes = ByteArray(4)
-            inputStream.read(bytes)
-            bytes.reverse() // Little endian -> Big endian
-            val imageSize = BigInteger(1, bytes).toLong()
-            // If the image size is LOWER than the compressed file, then
-            // the image size must be wrong.
-            if (imageSize > fileSize) {
-                return Pair(uri, imageSize)
+        // If the .gz is smaller than 3gb, try returning the image size by reading the last 4 bytes.
+        if (fileSize in 5..threeGb) {
+            try {
+                storageManager.openInputStream(uri).use { inputStream ->
+                    var toSkip = fileSize - 4
+                    while (toSkip > 0) {
+                        val skipped = inputStream.skip(toSkip)
+                        if (skipped <= 0) break
+                        toSkip -= skipped
+                    }
+                    val bytes = ByteArray(4)
+                    var readTotal = 0
+                    while (readTotal < 4) {
+                        val r = inputStream.read(bytes, readTotal, 4 - readTotal)
+                        if (r == -1) break
+                        readTotal += r
+                    }
+                    if (readTotal == 4) {
+                        bytes.reverse() // Little endian -> Big endian
+                        val imageSize = BigInteger(1, bytes).toLong()
+                        if (imageSize > fileSize) {
+                            return Pair(uri, imageSize)
+                        }
+                    }
+                }
+            } catch (_: Exception) {
             }
         }
-        // If the .gz is bigger than 3gb or the fast-way returns a
-        // wrong value, we need to decompress the file and calculate
-        // the size. SLOWWWWWWWWWWWWWW
         val outputFile = getFileName(uri)
         onStepUpdate(InstallationStep.DECOMPRESSING_GZIP)
         val extractedFilePair =
